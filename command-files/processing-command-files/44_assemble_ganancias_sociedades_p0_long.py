@@ -1,0 +1,91 @@
+"""Assemble all current P0 Ganancias Sociedades long extracts."""
+
+import csv
+from pathlib import Path
+import sys
+
+
+sys.dont_write_bytecode = True
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+CONFIG_DIR = SCRIPT_DIR.parents[0] / "config"
+sys.path.insert(0, str(SCRIPT_DIR))
+sys.path.insert(0, str(CONFIG_DIR))
+
+from afip_ganancias_sociedades import long_fieldnames  # noqa: E402
+from project_config import (  # noqa: E402
+    GANANCIAS_SOCIEDADES_P0_23111_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231121_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231122_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231123_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231124_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231125_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231126_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231127_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_23113_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_23114_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231151_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311511_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311512_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311513_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311514_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231152_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311521_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231153_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311531_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311532_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_LONG_PATH,
+)
+
+
+P0_LONG_COMPONENT_PATHS = (
+    GANANCIAS_SOCIEDADES_P0_23111_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231121_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231122_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231123_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231124_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231125_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231126_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231127_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_23113_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_23114_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231151_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311511_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311512_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311513_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311514_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231152_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311521_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_231153_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311531_LONG_PATH,
+    GANANCIAS_SOCIEDADES_P0_2311532_LONG_PATH,
+)
+
+
+def main() -> None:
+    fieldnames = long_fieldnames()
+    total_rows = 0
+    GANANCIAS_SOCIEDADES_P0_LONG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with GANANCIAS_SOCIEDADES_P0_LONG_PATH.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=fieldnames)
+        writer.writeheader()
+        for path in P0_LONG_COMPONENT_PATHS:
+            with path.open(encoding="utf-8") as input_file:
+                reader = csv.DictReader(input_file)
+                if reader.fieldnames != fieldnames:
+                    raise ValueError(f"Unexpected fieldnames in {path}")
+                for row in reader:
+                    writer.writerow(row)
+                    total_rows += 1
+
+    print(f"wrote={GANANCIAS_SOCIEDADES_P0_LONG_PATH}")
+    print(f"rows={total_rows}")
+    print(f"component_files={len(P0_LONG_COMPONENT_PATHS)}")
+
+
+if __name__ == "__main__":
+    main()

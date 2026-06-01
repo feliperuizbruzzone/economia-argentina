@@ -1,0 +1,197 @@
+# AFIP structural mapping for the annual statistical series.
+# Purpose: document archive/layout epochs before writing extraction code.
+# Scope: annual ZIP packages linked from the official anuario page, 1998-2023.
+# Source page: https://www.afip.gob.ar/institucional/estudios/anuario-estadisticas-tributarias/
+# Inspection date: 2026-05-30.
+#
+# Important:
+# - This is a structural map, not an extraction script.
+# - "publication_date_available" is the HTTP Last-Modified date currently exposed
+#   by the server. For older files it appears to reflect a bulk republication in
+#   2019, so it should not be treated as the original historical publication date.
+# - "table_unit" means the smallest file-like object that likely represents one
+#   statistical table: XLS workbook, XLS inside CAB, or Excel-exported HTM page.
+
+series:
+  source_institution: "AFIP"
+  current_site_branding: "ARCA"
+  coverage_years: [1998, 2023]
+  archive_count: 26
+  archive_type: "zip"
+  final_output_target: "data/analysis-data/afip_ganancias_sociedades_long.csv"
+
+epochs:
+  legacy_direct_xls_install_layout:
+    years: [1998, 1999, 2001]
+    # ZIP contains XLS files directly, but also installer artifacts.
+    # 2001 includes two year subfolders under Archivos/2000 and Archivos/2001.
+    outer_container: "zip"
+    payload_formats: ["xls", "cab_without_table_xls", "exe", "lst"]
+    table_unit: "direct_xls_workbook"
+    root_patterns:
+      - "AFIP/Publicacion/**"
+      - "Archivos/*.xls"
+      - "Archivos/<year>/*.xls"
+    table_file_pattern: "(^|/)\\d[\\d._-]*\\.xls$"
+    metadata_available:
+      - "year_from_link_text"
+      - "year_from_archive_filename"
+      - "archive_filename"
+      - "source_url"
+      - "http_last_modified"
+      - "http_content_length"
+      - "http_etag"
+      - "zip_member_modified_dates"
+      - "xls_sheet_names"
+      - "xls_dimensions"
+    extraction_implication: "Read XLS directly from ZIP; ignore setup files and CAB unless future validation finds missing tables."
+
+  cab_embedded_xls:
+    years: [2000, 2002, 2003, 2004, 2005, 2006, 2007, 2008]
+    # ZIP surface has only setup.exe, SETUP.LST and AFIP.CAB.
+    # The actual table workbooks are inside AFIP.CAB.
+    outer_container: "zip"
+    inner_container: "AFIP.CAB"
+    payload_formats: ["cab", "xls_inside_cab", "exe", "lst"]
+    table_unit: "cab_member_xls_workbook"
+    root_patterns:
+      - "AFIP.CAB"
+      - "SETUP.LST"
+      - "setup.exe"
+    table_file_pattern: "^\\d[\\d._-]*(?:_\\d{4})?(?:_2)?\\.xls$"
+    special_notes:
+      - "2002 CAB contains multiple year suffixes: _2000, _2001 and _2002."
+      - "2000 and 2002 need CAB listing/extraction before XLS reading."
+      - "Suffix _2 usually marks continuation/second part of a table, not a separate variable family."
+    metadata_available:
+      - "year_from_link_text"
+      - "year_from_archive_filename"
+      - "archive_filename"
+      - "source_url"
+      - "http_last_modified"
+      - "http_content_length"
+      - "http_etag"
+      - "cab_member_modified_dates"
+      - "xls_sheet_names_after_cab_read"
+      - "xls_dimensions_after_cab_read"
+    extraction_implication: "Pipeline needs a CAB inventory/extract step before table-level XLS parsing."
+
+  excel_html_export:
+    years: [2009, 2010, 2011, 2012, 2013, 2014]
+    # These packages are not XLS-first. Tables are exported HTML workbooks with
+    # support folders containing sheet001.htm, stylesheet.css, xml and images.
+    outer_container: "zip"
+    payload_formats: ["htm", "xml", "css", "gif", "png", "txt"]
+    table_unit: "main_htm_file"
+    root_patterns:
+      - "Archivos/**/*.htm"
+      - "Publicacion AFIP/Archivos/**/*.htm"
+      - "archivos/**/*.htm"
+      - "Indice.htm"
+      - "Indice_archivos/**"
+    table_file_pattern: "(^|/)\\d[\\d._-]*\\.htm$"
+    special_notes:
+      - "HTML files appear to be Excel web exports, not ordinary web tables."
+      - "Support folders must be ignored unless formulas/styles are needed."
+      - "2014 changes root folder casing to archivos/."
+    metadata_available:
+      - "year_from_link_text"
+      - "year_from_archive_filename"
+      - "archive_filename"
+      - "source_url"
+      - "http_last_modified"
+      - "http_content_length"
+      - "http_etag"
+      - "zip_member_modified_dates"
+      - "html_table_path"
+    extraction_implication: "Pipeline needs a separate HTML-table parser or conversion path for this epoch."
+
+  modern_direct_xls_transition:
+    years: [2015, 2016, 2017, 2018, 2019, 2020]
+    # Return to XLS workbooks, but folder names and some extensions vary.
+    # 2018 and 2019 contain some XLSX files, mostly text/auxiliary or late chapter material.
+    outer_container: "zip"
+    payload_formats: ["xls", "xlsx_optional", "txt_optional"]
+    table_unit: "direct_xls_workbook"
+    root_patterns:
+      - "Anuario Estadisitcas Tributarias Año 2016/*.xls"
+      - "AnuarioEstadisticasTributariasYYYY/*.xls"
+      - "EstadisticasTributarias2018/*.xls"
+      - "Public 2019/Cuadros/*.xls"
+      - "Cuadros/*.xls"
+    table_file_pattern: "(^|/)\\d[\\d._-]*(?:Continuacion)?(?:_2-?)?\\.xls$"
+    special_notes:
+      - "2015 archive/root label says Año 2016 although the link is for 2015."
+      - "2016-2018 have textos/ subfolder."
+      - "2019 groups everything under Public 2019/Cuadros."
+      - "2020 uses root Cuadros/."
+    metadata_available:
+      - "year_from_link_text"
+      - "year_from_archive_filename"
+      - "archive_filename"
+      - "source_url"
+      - "http_last_modified"
+      - "http_content_length"
+      - "http_etag"
+      - "zip_member_modified_dates"
+      - "xls_sheet_names"
+      - "xls_dimensions"
+    extraction_implication: "One XLS reader can cover most tables, but path normalization must be epoch-aware."
+
+  modern_direct_xls_current:
+    years: [2021, 2022, 2023]
+    # Most regular current layout: one top folder, numeric XLS tables,
+    # Indice/Anexo and textos folder.
+    outer_container: "zip"
+    payload_formats: ["xls"]
+    table_unit: "direct_xls_workbook"
+    root_patterns:
+      - "Estadísticas Tributarias YYYY/*.xls"
+      - "Estadísticas Tributarias YYYY/textos/*.xls"
+      - "Estadísticas Tributarias YYYY/Textos/*.xls"
+    table_file_pattern: "(^|/)\\d[\\d._-]*(?:_\\d+)?\\.xls$"
+    special_notes:
+      - "Top folder contains accented Estadísticas in the ZIP member name."
+      - "Textos/textos casing differs by year: 2021 uses Textos, 2022-2023 use textos."
+      - "ZIP filename casing varies: Estadisticas-Tributarias vs estadisticas-Tributarias."
+    metadata_available:
+      - "year_from_link_text"
+      - "year_from_archive_filename"
+      - "archive_filename"
+      - "source_url"
+      - "http_last_modified"
+      - "http_content_length"
+      - "http_etag"
+      - "zip_member_modified_dates"
+      - "xls_sheet_names"
+      - "xls_dimensions"
+    extraction_implication: "Best baseline epoch for designing the canonical table parser."
+
+per_year_summary:
+  # table_units_observed counts likely table files, not all support files.
+  - {year: 1998, epoch: legacy_direct_xls_install_layout, archive: "estadisticasTributarias1998.zip", table_units_observed: 103, payload: "direct XLS plus installer artifacts"}
+  - {year: 1999, epoch: legacy_direct_xls_install_layout, archive: "estadisticasTributarias1999.zip", table_units_observed: 124, payload: "direct XLS plus installer artifacts"}
+  - {year: 2000, epoch: cab_embedded_xls, archive: "estadisticasTributarias2000.zip", table_units_observed: 133, payload: "XLS inside AFIP.CAB"}
+  - {year: 2001, epoch: legacy_direct_xls_install_layout, archive: "estadisticasTributarias2001.zip", table_units_observed: 276, payload: "direct XLS in Archivos/2000 and Archivos/2001"}
+  - {year: 2002, epoch: cab_embedded_xls, archive: "estadisticasTributarias2002.zip", table_units_observed: 683, payload: "XLS inside AFIP.CAB, includes suffixes _2000/_2001/_2002"}
+  - {year: 2003, epoch: cab_embedded_xls, archive: "estadisticasTributarias2003.zip", table_units_observed: 376, payload: "XLS inside AFIP.CAB"}
+  - {year: 2004, epoch: cab_embedded_xls, archive: "estadisticasTributarias2004.zip", table_units_observed: 380, payload: "XLS inside AFIP.CAB"}
+  - {year: 2005, epoch: cab_embedded_xls, archive: "estadisticasTributarias2005.zip", table_units_observed: 380, payload: "XLS inside AFIP.CAB"}
+  - {year: 2006, epoch: cab_embedded_xls, archive: "estadisticasTributarias2006.zip", table_units_observed: 380, payload: "XLS inside AFIP.CAB"}
+  - {year: 2007, epoch: cab_embedded_xls, archive: "estadisticasTributarias2007.zip", table_units_observed: 371, payload: "XLS inside AFIP.CAB"}
+  - {year: 2008, epoch: cab_embedded_xls, archive: "estadisticasTributarias2008.zip", table_units_observed: 377, payload: "XLS inside AFIP.CAB"}
+  - {year: 2009, epoch: excel_html_export, archive: "estadisticasTributarias2009.zip", table_units_observed: 321, payload: "Excel HTML export"}
+  - {year: 2010, epoch: excel_html_export, archive: "estadisticasTributarias2010.zip", table_units_observed: 333, payload: "Excel HTML export"}
+  - {year: 2011, epoch: excel_html_export, archive: "estadisticasTributarias2011.zip", table_units_observed: 319, payload: "Excel HTML export"}
+  - {year: 2012, epoch: excel_html_export, archive: "estadisticasTributarias2012.zip", table_units_observed: 319, payload: "Excel HTML export"}
+  - {year: 2013, epoch: excel_html_export, archive: "estadisticasTributarias2013.zip", table_units_observed: 319, payload: "Excel HTML export"}
+  - {year: 2014, epoch: excel_html_export, archive: "estadisticasTributarias2014.zip", table_units_observed: 393, payload: "Excel HTML export"}
+  - {year: 2015, epoch: modern_direct_xls_transition, archive: "estadisticasTributarias2015.zip", table_units_observed: 399, payload: "direct XLS"}
+  - {year: 2016, epoch: modern_direct_xls_transition, archive: "estadisticasTributarias2016.zip", table_units_observed: 312, payload: "direct XLS"}
+  - {year: 2017, epoch: modern_direct_xls_transition, archive: "estadisticasTributarias2017.zip", table_units_observed: 312, payload: "direct XLS"}
+  - {year: 2018, epoch: modern_direct_xls_transition, archive: "estadisticasTributarias2018.zip", table_units_observed: 340, payload: "direct XLS plus auxiliary XLSX"}
+  - {year: 2019, epoch: modern_direct_xls_transition, archive: "Public2019.zip", table_units_observed: 305, payload: "direct XLS plus some XLSX"}
+  - {year: 2020, epoch: modern_direct_xls_transition, archive: "Publicacion-2020.zip", table_units_observed: 328, payload: "direct XLS"}
+  - {year: 2021, epoch: modern_direct_xls_current, archive: "Estadisticas-Tributarias-2021.zip", table_units_observed: 334, payload: "direct XLS"}
+  - {year: 2022, epoch: modern_direct_xls_current, archive: "estadisticas-Tributarias-2022.zip", table_units_observed: 364, payload: "direct XLS"}
+  - {year: 2023, epoch: modern_direct_xls_current, archive: "Estadisticas-Tributarias-2023.zip", table_units_observed: 362, payload: "direct XLS"}
