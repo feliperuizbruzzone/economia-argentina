@@ -33,7 +33,12 @@ Decision actual del investigador:
 - Formato de la base canonica: largo.
 - Direccion de construccion: comenzar en el ultimo fiscal year disponible y avanzar hacia atras por periodos homogeneos.
 
-La base final no debe reducir de entrada a una unica unidad sectorial comun. Debe preservar la desagregacion original disponible y agregar campos que permitan homologar despues: `classifier_period`, `activity_level`, `activity_code`, `activity_label_original`, `activity_section_original`, `dimension_type`, `source_table_id`, `variable_name`, `value`, `unit_original` y `value_pesos_current`.
+La base final no debe reducir de entrada a una unica unidad sectorial comun. El
+flujo debe preservar la desagregacion original disponible en los extractos
+intermedios y diccionarios asociados: `classifier_period`, `activity_level`,
+`activity_code`, `activity_label_original`, `activity_section_original`,
+`dimension_type`, `source_table_id`, `variable_name`, `unit_original`, `value`
+y `value_pesos_current`.
 
 ## 3. Fuente De Datos AFIP/ARCA
 
@@ -146,11 +151,11 @@ Las rutas, periodos, nombres esperados y constantes compartidas deben definirse 
 
 ## 9. Artefactos Esperados
 
-La salida canonica actual de datos de analisis se guarda como CSV tidy
-comprimido y fechado:
+La salida canonica actual de datos de analisis se guarda como CSV tidy sin
+comprimir, compacto y fechado:
 
 ```text
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz
+data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv
 ```
 
 Los diccionarios de trazabilidad asociados se generan como archivos
@@ -191,14 +196,15 @@ El directorio contiene el andamiaje TIER inicial y los datos crudos AFIP:
 - Las advertencias P4 estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P5 para publication year 2002 / fiscal years 1999-2001, con 31.229 filas largas y validacion de 0 fallas.
 - Se completo P6 para publication years 1998-1999 / fiscal years 1997-1998, con 3.044 filas largas y validacion de 0 fallas.
-- Se reemplazaron los CSV completos de analisis por `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`, con 819.867 filas y 11.758.387 bytes.
-- Se genero el diccionario de fuente `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv` con 320 entradas.
-- Se genero el diccionario de actividad `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv` con 569 entradas.
-- Se genero el diccionario de homologacion `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv` con 569 entradas.
+- Se reemplazo el CSV tidy comprimido por `data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`, con 819.867 filas y 36.749.414 bytes sin comprimir.
+- Se genero el diccionario de fuente `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv` con 320 entradas.
+- Se genero el diccionario de actividad `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv` con 569 entradas.
+- Se genero el diccionario de variable `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv` con 306 entradas.
+- Se genero el diccionario de homologacion `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv` con 569 entradas.
 - La validacion final vigente (`68_validate_ganancias_sociedades_tidy_outputs.py`) termino con 0 fallas y 0 advertencias.
 - Existe un `.git` vacio/invalido de solo lectura; no debe tratarse como repositorio activo.
 - El repositorio Git operativo usa metadata separada en `.git-local`, con remoto `https://github.com/feliperuizbruzzone/economia-argentina.git`.
-- `.gitignore` permite versionar los ZIP de AFIP y el panel final `.csv.gz`; ignora CSV sin comprimir regenerables, intermedios y reportes.
+- `.gitignore` permite versionar los ZIP de AFIP y el panel final CSV fechado `2026-07-10`; ignora otros CSV de analisis regenerables, CSV comprimidos, intermedios y reportes.
 
 ## 11. Decisiones Pendientes
 
@@ -216,8 +222,8 @@ Decisiones ya tomadas:
 - El universo empirico inicial es el capitulo `Impuesto a las Ganancias Sociedades`.
 - La salida canonica debe ser formato largo.
 - El pipeline debe preservar el maximo nivel de desagregacion observable por periodo.
-- La unidad fisica de fila de la base larga debe ser una celda estadistica normalizada: `fiscal_year x source_table_id x dimension_type x dimension_value x variable_name`, con metadatos de actividad, universo, unidad y fuente.
-- La homologacion de ramas no reemplaza las columnas fuente. Agrega `rama_comun_*` para comparabilidad amplia 1997-2022 y `rama_detalle_homologada_*` para conservar el maximo detalle observado por clasificador.
+- La unidad fisica de fila de la base larga debe ser una celda estadistica normalizada: `fiscal_year x source_table_id x dimension_type x dimension_value x variable_name`, con metadatos de actividad, universo, unidad y fuente recuperables por diccionarios.
+- La homologacion de ramas no reemplaza la informacion fuente. Agrega `rama_comun_*` para comparabilidad amplia 1997-2022 y `rama_detalle_homologada_*` para conservar el maximo detalle observado por clasificador, actualmente en el diccionario de actividad.
 
 ## 12. Comparabilidad Para Ganancias Sociedades
 
@@ -1012,26 +1018,28 @@ Estado: completada.
 Productos generados:
 
 ```text
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz
-data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
+data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
 ```
 
 El panel tidy conserva maxima desagregacion original mediante llaves
-`source_key` y `activity_key`, mas codigos analiticos de actividad y rama. Las
-etiquetas largas, rutas fuente y notas viven en diccionarios intermedios
-regenerables.
+`source_key`, `activity_key` y `variable_key`. Los codigos analiticos de
+actividad y rama, etiquetas largas, rutas fuente, nombres de variables y notas
+viven en diccionarios intermedios regenerables.
 
 Validacion:
 
 - Script: `python3 command-files/processing-command-files/68_validate_ganancias_sociedades_tidy_outputs.py`.
 - Resultado: 0 fallas, 0 advertencias.
 - Filas del panel final: 819.867.
-- Tamano del panel final: 11.758.387 bytes.
+- Tamano del panel final: 36.749.414 bytes sin comprimir.
 - Cobertura fiscal: 1997-2022.
 - Entradas de diccionario de fuente: 320.
 - Entradas de diccionario de actividad/ramas: 569.
+- Entradas de diccionario de variables: 306.
 
 ### Fase 10: variables derivadas y analisis R
 
@@ -1068,10 +1076,11 @@ Los CSV intermedios AFIP canonicos viven en `data/intermediate-data/afip-estadis
 
 La salida final fechada ya esta creada:
 
-- `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
-- `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv`.
-- `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv`.
-- `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv`.
+- `data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`.
+- `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv`.
+- `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv`.
+- `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv`.
+- `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv`.
 
 El siguiente paso recomendado es iniciar analisis R o decidir una homologacion fina de actividades de 3 digitos entre clasificador viejo y nuevo:
 

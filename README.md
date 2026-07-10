@@ -5,12 +5,12 @@ Repositorio organizado segun el protocolo Project TIER 4.0 para sistematizar ser
 El objetivo es construir una serie 1998-2023 en CSV para analizar rentabilidad y desempeno economico por rama o subrama economica cuando los archivos fuente lo permitan.
 El foco operativo actual es el capitulo `Impuesto a las Ganancias Sociedades`, con maxima desagregacion disponible y base canonica en formato largo.
 
-Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados en `data/input-data/raw/afip-estadisticas-tributarias/`. El pipeline de Ganancias Sociedades ya cubre P0-P6, fiscal years 1997-2022, y genera un panel tidy homologado comprimido, con diccionarios de trazabilidad regenerables.
+Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados en `data/input-data/raw/afip-estadisticas-tributarias/`. El pipeline de Ganancias Sociedades ya cubre P0-P6, fiscal years 1997-2022, y genera un panel tidy homologado sin comprimir menor a 100 MB, con diccionarios de trazabilidad regenerables.
 
 ## Archivos relevantes
 
 - [Minuta del procedimiento AFIP/ARCA](docs/minuta_afip_arca.md): resumen de descarga, sistematizacion, homologacion y estructura del panel.
-- [Panel tidy homologado](data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz): salida final comprimida y apta para versionar en GitHub.
+- [Panel tidy homologado](data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv): salida final sin comprimir y apta para versionar en GitHub.
 - [Documentacion AFIP](documentation/afip/README.md): indice de documentos metodologicos de la fuente.
 
 Nota: los diccionarios de trazabilidad se generan en `data/intermediate-data/afip-estadisticas-tributarias/` y no se versionan porque son salidas regenerables.
@@ -24,7 +24,7 @@ Nota: los diccionarios de trazabilidad se generan en `data/intermediate-data/afi
 - `data/input-data/`: datos originales. Se tratan como solo lectura una vez descargados o incorporados.
 - `data/intermediate-data/`: archivos transitorios generados por scripts. No son insumos canonicos.
 - `data/intermediate-data/afip-estadisticas-tributarias/`: salidas intermedias regenerables de la fuente AFIP/ARCA.
-- `data/analysis-data/`: datos listos para analisis. La salida actual es `2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
+- `data/analysis-data/`: datos listos para analisis. La salida actual es `2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`.
 - `data/output-data/`: resultados generados, como tablas, figuras o reportes.
 - `documentation/`: notas metodologicas, diccionarios, referencias y bitacoras.
 - `tests/`: pruebas automatizadas y validaciones de reproducibilidad.

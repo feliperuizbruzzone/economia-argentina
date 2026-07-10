@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections import Counter
 import csv
-import gzip
-import io
 from pathlib import Path
 import re
 import sys
@@ -31,10 +29,11 @@ from project_config import (  # noqa: E402
     GANANCIAS_SOCIEDADES_P6_LONG_PATH,
     GANANCIAS_SOCIEDADES_SOURCE_DICTIONARY_PATH,
     GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH,
+    GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH,
 )
 
 
-HARMONIZATION_VERSION = "afip_ganancias_sociedades_ramas_v1_2026-05-31"
+HARMONIZATION_VERSION = "afip_ganancias_sociedades_ramas_v1_2026-07-10"
 
 COMPONENT_PATHS = (
     GANANCIAS_SOCIEDADES_P0_LONG_PATH,
@@ -47,25 +46,13 @@ COMPONENT_PATHS = (
 )
 
 TIDY_FIELDNAMES = [
-    "publication_year",
-    "fiscal_year",
-    "period_id",
-    "source_table_id",
     "source_key",
     "activity_key",
-    "dimension_type",
-    "dimension_value",
+    "variable_key",
+    "value",
+    "value_pesos_current",
     "source_row_zero_based",
     "source_column_zero_based",
-    "classifier_period",
-    "activity_level",
-    "activity_code",
-    "rama_comun_codigo",
-    "rama_detalle_homologada_codigo",
-    "variable_name",
-    "value",
-    "unit_original",
-    "value_pesos_current",
 ]
 
 SOURCE_DICTIONARY_FIELDNAMES = [
@@ -104,6 +91,13 @@ ACTIVITY_DICTIONARY_FIELDNAMES = [
     "rama_homologacion_nota",
     "fiscal_year_min",
     "fiscal_year_max",
+    "row_count",
+]
+
+VARIABLE_DICTIONARY_FIELDNAMES = [
+    "variable_key",
+    "variable_name",
+    "unit_original",
     "row_count",
 ]
 
@@ -367,6 +361,8 @@ def _write_tidy_panel(
     source_rows: dict[str, dict[str, str | int]],
     activity_key_by_tuple: dict[tuple[str, ...], str],
     activity_rows: dict[str, dict[str, str | int | set[str]]],
+    variable_key_by_tuple: dict[tuple[str, str], str],
+    variable_rows: dict[str, dict[str, str | int]],
 ) -> tuple[int, Counter[str], Counter[str]]:
     source_fieldnames = long_fieldnames()
     total_rows = 0
@@ -374,96 +370,87 @@ def _write_tidy_panel(
     branch_counts: Counter[str] = Counter()
 
     GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.open("wb") as binary_file:
-        with gzip.GzipFile(
-            filename="",
-            fileobj=binary_file,
-            mode="wb",
-            compresslevel=9,
-            mtime=0,
-        ) as gzip_file:
-            with io.TextIOWrapper(
-                gzip_file,
-                encoding="utf-8",
-                newline="",
-            ) as text_file:
-                writer = csv.DictWriter(text_file, fieldnames=TIDY_FIELDNAMES)
-                writer.writeheader()
-                for path in COMPONENT_PATHS:
-                    with path.open(encoding="utf-8") as input_file:
-                        reader = csv.DictReader(input_file)
-                        if reader.fieldnames != source_fieldnames:
-                            raise ValueError(f"Unexpected fieldnames in {path}")
-                        for row in reader:
-                            harmonized = _homologate_row(row)
+    with GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=TIDY_FIELDNAMES)
+        writer.writeheader()
+        for path in COMPONENT_PATHS:
+            with path.open(encoding="utf-8") as input_file:
+                reader = csv.DictReader(input_file)
+                if reader.fieldnames != source_fieldnames:
+                    raise ValueError(f"Unexpected fieldnames in {path}")
+                for row in reader:
+                    harmonized = _homologate_row(row)
 
-                            source_tuple = _source_tuple(row)
-                            source_key = source_key_by_tuple.get(source_tuple)
-                            if source_key is None:
-                                source_key = _make_key("S", len(source_key_by_tuple) + 1)
-                                source_key_by_tuple[source_tuple] = source_key
-                                source_rows[source_key] = {
-                                    "source_key": source_key,
-                                    **{
-                                        field: row[field]
-                                        for field in SOURCE_DICTIONARY_FIELDNAMES[1:-1]
-                                    },
-                                    "row_count": 0,
-                                }
-                            source_rows[source_key]["row_count"] += 1  # type: ignore[operator]
+                    source_tuple = _source_tuple(row)
+                    source_key = source_key_by_tuple.get(source_tuple)
+                    if source_key is None:
+                        source_key = _make_key("S", len(source_key_by_tuple) + 1)
+                        source_key_by_tuple[source_tuple] = source_key
+                        source_rows[source_key] = {
+                            "source_key": source_key,
+                            **{
+                                field: row[field]
+                                for field in SOURCE_DICTIONARY_FIELDNAMES[1:-1]
+                            },
+                            "row_count": 0,
+                        }
+                    source_rows[source_key]["row_count"] += 1  # type: ignore[operator]
 
-                            activity_tuple = _activity_tuple(row, harmonized)
-                            activity_key = activity_key_by_tuple.get(activity_tuple)
-                            if activity_key is None:
-                                activity_key = _make_key("A", len(activity_key_by_tuple) + 1)
-                                activity_key_by_tuple[activity_tuple] = activity_key
-                                activity_rows[activity_key] = {
-                                    "activity_key": activity_key,
-                                    "rama_homologacion_version": HARMONIZATION_VERSION,
-                                    "classifier_period": row["classifier_period"],
-                                    "activity_level": row["activity_level"],
-                                    "activity_code": row["activity_code"],
-                                    "activity_label_original": row["activity_label_original"],
-                                    "activity_section_original": row[
-                                        "activity_section_original"
-                                    ],
-                                    **harmonized,
-                                    "years": set(),
-                                    "row_count": 0,
-                                }
-                            activity_rows[activity_key]["years"].add(row["fiscal_year"])  # type: ignore[union-attr]
-                            activity_rows[activity_key]["row_count"] += 1  # type: ignore[operator]
+                    activity_tuple = _activity_tuple(row, harmonized)
+                    activity_key = activity_key_by_tuple.get(activity_tuple)
+                    if activity_key is None:
+                        activity_key = _make_key("A", len(activity_key_by_tuple) + 1)
+                        activity_key_by_tuple[activity_tuple] = activity_key
+                        activity_rows[activity_key] = {
+                            "activity_key": activity_key,
+                            "rama_homologacion_version": HARMONIZATION_VERSION,
+                            "classifier_period": row["classifier_period"],
+                            "activity_level": row["activity_level"],
+                            "activity_code": row["activity_code"],
+                            "activity_label_original": row["activity_label_original"],
+                            "activity_section_original": row[
+                                "activity_section_original"
+                            ],
+                            **harmonized,
+                            "years": set(),
+                            "row_count": 0,
+                        }
+                    activity_rows[activity_key]["years"].add(row["fiscal_year"])  # type: ignore[union-attr]
+                    activity_rows[activity_key]["row_count"] += 1  # type: ignore[operator]
 
-                            writer.writerow(
-                                {
-                                    "publication_year": row["publication_year"],
-                                    "fiscal_year": row["fiscal_year"],
-                                    "period_id": row["period_id"],
-                                    "source_table_id": row["source_table_id"],
-                                    "source_key": source_key,
-                                    "activity_key": activity_key,
-                                    "dimension_type": row["dimension_type"],
-                                    "dimension_value": row["dimension_value"],
-                                    "source_row_zero_based": row["source_row_zero_based"],
-                                    "source_column_zero_based": row[
-                                        "source_column_zero_based"
-                                    ],
-                                    "classifier_period": row["classifier_period"],
-                                    "activity_level": row["activity_level"],
-                                    "activity_code": row["activity_code"],
-                                    "rama_comun_codigo": harmonized["rama_comun_codigo"],
-                                    "rama_detalle_homologada_codigo": harmonized[
-                                        "rama_detalle_homologada_codigo"
-                                    ],
-                                    "variable_name": row["variable_name"],
-                                    "value": row["value"],
-                                    "unit_original": row["unit_original"],
-                                    "value_pesos_current": row["value_pesos_current"],
-                                }
-                            )
-                            total_rows += 1
-                            status_counts[harmonized["rama_homologacion_estado"]] += 1
-                            branch_counts[harmonized["rama_comun_codigo"]] += 1
+                    variable_tuple = (row["variable_name"], row["unit_original"])
+                    variable_key = variable_key_by_tuple.get(variable_tuple)
+                    if variable_key is None:
+                        variable_key = _make_key("V", len(variable_key_by_tuple) + 1)
+                        variable_key_by_tuple[variable_tuple] = variable_key
+                        variable_rows[variable_key] = {
+                            "variable_key": variable_key,
+                            "variable_name": row["variable_name"],
+                            "unit_original": row["unit_original"],
+                            "row_count": 0,
+                        }
+                    variable_rows[variable_key]["row_count"] += 1  # type: ignore[operator]
+
+                    writer.writerow(
+                        {
+                            "source_key": source_key,
+                            "activity_key": activity_key,
+                            "variable_key": variable_key,
+                            "value": row["value"],
+                            "value_pesos_current": row["value_pesos_current"],
+                            "source_row_zero_based": row["source_row_zero_based"],
+                            "source_column_zero_based": row[
+                                "source_column_zero_based"
+                            ],
+                        }
+                    )
+                    total_rows += 1
+                    status_counts[harmonized["rama_homologacion_estado"]] += 1
+                    branch_counts[harmonized["rama_comun_codigo"]] += 1
 
     return total_rows, status_counts, branch_counts
 
@@ -518,6 +505,22 @@ def _write_activity_dictionaries(rows_by_key: dict[str, dict[str, str | int | se
             )
 
 
+def _write_variable_dictionary(rows_by_key: dict[str, dict[str, str | int]]) -> None:
+    GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    with GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH.open(
+        "w",
+        newline="",
+        encoding="utf-8",
+    ) as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=VARIABLE_DICTIONARY_FIELDNAMES)
+        writer.writeheader()
+        for variable_key in sorted(rows_by_key):
+            writer.writerow(rows_by_key[variable_key])
+
+
 def main() -> None:
     """Build a compact final panel and dictionaries from validated P0-P6 extracts."""
 
@@ -525,15 +528,20 @@ def main() -> None:
     source_rows: dict[str, dict[str, str | int]] = {}
     activity_key_by_tuple: dict[tuple[str, ...], str] = {}
     activity_rows: dict[str, dict[str, str | int | set[str]]] = {}
+    variable_key_by_tuple: dict[tuple[str, str], str] = {}
+    variable_rows: dict[str, dict[str, str | int]] = {}
 
     total_rows, status_counts, branch_counts = _write_tidy_panel(
         source_key_by_tuple,
         source_rows,
         activity_key_by_tuple,
         activity_rows,
+        variable_key_by_tuple,
+        variable_rows,
     )
     _write_source_dictionary(source_rows)
     _write_activity_dictionaries(activity_rows)
+    _write_variable_dictionary(variable_rows)
 
     print(f"wrote={GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH}")
     print(f"rows={total_rows}")
@@ -542,6 +550,8 @@ def main() -> None:
     print(f"source_dictionary_rows={len(source_rows)}")
     print(f"activity_dictionary={GANANCIAS_SOCIEDADES_ACTIVITY_DICTIONARY_PATH}")
     print(f"activity_dictionary_rows={len(activity_rows)}")
+    print(f"variable_dictionary={GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH}")
+    print(f"variable_dictionary_rows={len(variable_rows)}")
     print(f"branch_dictionary={GANANCIAS_SOCIEDADES_BRANCH_HARMONIZATION_DICTIONARY_PATH}")
     print(f"status_counts={dict(sorted(status_counts.items()))}")
     print(f"common_branch_counts={dict(sorted(branch_counts.items()))}")

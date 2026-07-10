@@ -41,7 +41,7 @@ data/analysis-data/
 ```
 
 - Los ZIP crudos quedaron versionables en Git. La salida final se publica como
-  `csv.gz` tidy para quedar por debajo del limite normal de GitHub.
+  CSV tidy sin comprimir y queda por debajo del limite normal de GitHub.
 
 Validacion basica:
 
@@ -109,11 +109,12 @@ python3 command-files/run_all.py
 
 Resultado final validado:
 
-- Panel tidy homologado: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
+- Panel tidy homologado: `data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`.
 - Filas del panel: 819.867.
-- Tamano comprimido validado: 11.758.387 bytes.
-- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv`.
-- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv`.
+- Tamano sin comprimir validado: 36.749.414 bytes.
+- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv`.
+- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv`.
+- Diccionario de variable: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv`.
 - Validacion final: 0 fallas.
 
 ## 3. Homologacion De Ramas Economicas
@@ -174,43 +175,31 @@ Orden fisico de los datos:
    P0, P1, P2, P3, P4, P5 y P6.
 3. Dentro de cada periodo se conserva el orden producido por los extractores:
    fuente, cuadro, dimension y variable.
-4. El panel final se comprime como gzip y separa metadatos largos en
-   diccionarios de fuente y actividad.
+4. El panel final queda como CSV sin comprimir y separa metadatos largos en
+   diccionarios de fuente, actividad y variable.
 5. Para analisis no debe dependerse del orden fisico del CSV; usar
    identificadores canonicos.
 
 Identificadores recomendados:
 
-- `publication_year`
-- `fiscal_year`
-- `source_table_id`
-- `dimension_type`
-- `dimension_value`
-- `variable_name`
+- `source_key`
+- `activity_key`
+- `variable_key`
+
+Para recuperar anio, cuadro, actividad, rama homologada y nombre de variable,
+unir el panel con los diccionarios correspondientes.
 
 Diccionario de columnas:
 
 | Columna | Descripcion |
 |---|---|
-| `publication_year` | Anio de publicacion del anuario o ZIP fuente. |
-| `fiscal_year` | Anio fiscal informado en el cuadro. |
-| `period_id` | Epoca estructural asignada por el pipeline. |
-| `source_table_id` | Identificador original del cuadro fuente. |
 | `source_key` | Llave hacia el diccionario de fuente. |
 | `activity_key` | Llave hacia el diccionario de actividad/homologacion. |
-| `dimension_type` | Tipo de dimension; para esta base principal, actividad economica. |
-| `dimension_value` | Codigo canonico de la dimension dentro del cuadro. |
+| `variable_key` | Llave hacia el diccionario de variables. |
+| `value` | Valor normalizado como texto/decimal segun fuente. |
+| `value_pesos_current` | Monto monetario convertido a pesos corrientes cuando aplica. |
 | `source_row_zero_based` | Fila fuente de la celda extraida, base cero. |
 | `source_column_zero_based` | Columna fuente de la celda extraida, base cero. |
-| `classifier_period` | Clasificador de actividad: `new` u `old`. |
-| `activity_level` | Nivel de actividad: total, seccion, actividad 3 digitos, amplia u otras. |
-| `activity_code` | Codigo de actividad extraido o normalizado desde la fuente. |
-| `rama_comun_codigo` | Codigo de rama amplia comparable en toda la serie. |
-| `rama_detalle_homologada_codigo` | Codigo de detalle preservado con namespace por clasificador. |
-| `variable_name` | Nombre canonico de la variable estadistica. |
-| `value` | Valor normalizado como texto/decimal segun fuente. |
-| `unit_original` | Unidad original observada, por ejemplo casos, miles o millones de pesos corrientes. |
-| `value_pesos_current` | Monto monetario convertido a pesos corrientes cuando aplica. |
 
 Columnas del diccionario de fuente:
 
@@ -254,6 +243,15 @@ Columnas del diccionario de actividad:
 | `fiscal_year_min` | Primer anio fiscal observado para esa clave. |
 | `fiscal_year_max` | Ultimo anio fiscal observado para esa clave. |
 | `row_count` | Filas del panel asociadas a la actividad. |
+
+Columnas del diccionario de variable:
+
+| Columna | Descripcion |
+|---|---|
+| `variable_key` | Llave usada en el panel tidy. |
+| `variable_name` | Nombre canonico de la variable estadistica. |
+| `unit_original` | Unidad original observada, por ejemplo casos, miles o millones de pesos corrientes. |
+| `row_count` | Filas del panel asociadas a la variable. |
 
 ## 5. Archivos De Referencia
 

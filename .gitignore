@@ -39,6 +39,10 @@ data/output-data/*
 !data/output-data/.gitkeep
 !data/output-data/README.md
 
-# Regenerable uncompressed analysis CSVs. The shareable final panel is the
-# compressed .csv.gz and is intentionally versionable.
+# Regenerable compressed legacy analysis CSVs.
+data/analysis-data/*.csv.gz
+
+# Regenerable analysis CSVs. The shareable final panel below is intentionally
+# versionable because it is validated below GitHub's regular blob limit.
 data/analysis-data/*.csv
+!data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv

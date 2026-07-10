@@ -2,7 +2,6 @@
 
 from collections import Counter
 import csv
-import gzip
 from pathlib import Path
 import sys
 
@@ -28,6 +27,8 @@ from project_config import (  # noqa: E402
     GANANCIAS_SOCIEDADES_P6_LONG_PATH,
     GANANCIAS_SOCIEDADES_SOURCE_DICTIONARY_PATH,
     GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH,
+    GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH,
+    ANALYSIS_DATA_DIR,
     VALIDATION_REPORTS_DIR,
 )
 
@@ -37,25 +38,13 @@ DETAIL_PATH = VALIDATION_REPORTS_DIR / "ganancias_sociedades_tidy_branch_counts.
 EXPECTED_FISCAL_YEARS = {str(year) for year in range(1997, 2023)}
 MAX_GITHUB_BLOB_BYTES = 100 * 1024 * 1024
 TIDY_FIELDNAMES = [
-    "publication_year",
-    "fiscal_year",
-    "period_id",
-    "source_table_id",
     "source_key",
     "activity_key",
-    "dimension_type",
-    "dimension_value",
+    "variable_key",
+    "value",
+    "value_pesos_current",
     "source_row_zero_based",
     "source_column_zero_based",
-    "classifier_period",
-    "activity_level",
-    "activity_code",
-    "rama_comun_codigo",
-    "rama_detalle_homologada_codigo",
-    "variable_name",
-    "value",
-    "unit_original",
-    "value_pesos_current",
 ]
 SOURCE_DICTIONARY_FIELDNAMES = [
     "source_key",
@@ -92,6 +81,12 @@ ACTIVITY_DICTIONARY_FIELDNAMES = [
     "rama_homologacion_nota",
     "fiscal_year_min",
     "fiscal_year_max",
+    "row_count",
+]
+VARIABLE_DICTIONARY_FIELDNAMES = [
+    "variable_key",
+    "variable_name",
+    "unit_original",
     "row_count",
 ]
 COMPONENT_PATHS = (
@@ -136,17 +131,63 @@ def _load_dictionary_keys(
     return keys, rows, row_count_sum
 
 
+def _load_source_dictionary() -> tuple[set[str], dict[str, str], int, int]:
+    keys: set[str] = set()
+    fiscal_year_by_key: dict[str, str] = {}
+    row_count_sum = 0
+    rows = 0
+    with GANANCIAS_SOCIEDADES_SOURCE_DICTIONARY_PATH.open(
+        encoding="utf-8",
+    ) as input_file:
+        reader = csv.DictReader(input_file)
+        if reader.fieldnames != SOURCE_DICTIONARY_FIELDNAMES:
+            raise ValueError(
+                f"Unexpected fieldnames in {GANANCIAS_SOCIEDADES_SOURCE_DICTIONARY_PATH}"
+            )
+        for row in reader:
+            rows += 1
+            source_key = row["source_key"]
+            keys.add(source_key)
+            fiscal_year_by_key[source_key] = row["fiscal_year"]
+            row_count_sum += int(row["row_count"])
+    return keys, fiscal_year_by_key, rows, row_count_sum
+
+
+def _load_activity_dictionary() -> tuple[set[str], dict[str, str], int, int]:
+    keys: set[str] = set()
+    branch_by_key: dict[str, str] = {}
+    row_count_sum = 0
+    rows = 0
+    with GANANCIAS_SOCIEDADES_ACTIVITY_DICTIONARY_PATH.open(
+        encoding="utf-8",
+    ) as input_file:
+        reader = csv.DictReader(input_file)
+        if reader.fieldnames != ACTIVITY_DICTIONARY_FIELDNAMES:
+            raise ValueError(
+                "Unexpected fieldnames in "
+                f"{GANANCIAS_SOCIEDADES_ACTIVITY_DICTIONARY_PATH}"
+            )
+        for row in reader:
+            rows += 1
+            activity_key = row["activity_key"]
+            keys.add(activity_key)
+            branch_by_key[activity_key] = row["rama_comun_codigo"]
+            row_count_sum += int(row["row_count"])
+    return keys, branch_by_key, rows, row_count_sum
+
+
 def _validate_tidy_panel(
     source_keys: set[str],
     activity_keys: set[str],
+    variable_keys: set[str],
+    fiscal_year_by_source_key: dict[str, str],
+    branch_by_activity_key: dict[str, str],
 ) -> tuple[int, set[str], Counter[str], list[str]]:
     failures: list[str] = []
     fiscal_years: set[str] = set()
     branch_counts: Counter[str] = Counter()
     rows = 0
-    with gzip.open(
-        GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH,
-        "rt",
+    with GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.open(
         newline="",
         encoding="utf-8",
     ) as input_file:
@@ -156,15 +197,26 @@ def _validate_tidy_panel(
             return rows, fiscal_years, branch_counts, failures
         for row_number, row in enumerate(reader, start=2):
             rows += 1
-            fiscal_years.add(row["fiscal_year"])
-            branch_counts[row["rama_comun_codigo"]] += 1
-            if row["source_key"] not in source_keys:
+            source_key = row["source_key"]
+            activity_key = row["activity_key"]
+            variable_key = row["variable_key"]
+            fiscal_year = fiscal_year_by_source_key.get(source_key)
+            if fiscal_year:
+                fiscal_years.add(fiscal_year)
+            branch_code = branch_by_activity_key.get(activity_key)
+            if branch_code:
+                branch_counts[branch_code] += 1
+            if source_key not in source_keys:
                 failures.append(f"csv row {row_number}: unknown source_key={row['source_key']}")
-            if row["activity_key"] not in activity_keys:
+            if activity_key not in activity_keys:
                 failures.append(
                     f"csv row {row_number}: unknown activity_key={row['activity_key']}"
                 )
-            if row["rama_comun_codigo"] == "NO_HOMOLOGADO":
+            if variable_key not in variable_keys:
+                failures.append(
+                    f"csv row {row_number}: unknown variable_key={row['variable_key']}"
+                )
+            if branch_code == "NO_HOMOLOGADO":
                 failures.append(f"csv row {row_number}: NO_HOMOLOGADO branch")
     return rows, fiscal_years, branch_counts, failures
 
@@ -190,20 +242,34 @@ def main() -> None:
             f"bytes={output_size} limit={MAX_GITHUB_BLOB_BYTES}"
         )
 
-    source_keys, source_dictionary_rows, source_row_count_sum = _load_dictionary_keys(
-        GANANCIAS_SOCIEDADES_SOURCE_DICTIONARY_PATH,
-        SOURCE_DICTIONARY_FIELDNAMES,
-        "source_key",
-    )
-    activity_keys, activity_dictionary_rows, activity_row_count_sum = _load_dictionary_keys(
-        GANANCIAS_SOCIEDADES_ACTIVITY_DICTIONARY_PATH,
-        ACTIVITY_DICTIONARY_FIELDNAMES,
-        "activity_key",
+    (
+        source_keys,
+        fiscal_year_by_source_key,
+        source_dictionary_rows,
+        source_row_count_sum,
+    ) = _load_source_dictionary()
+    (
+        activity_keys,
+        branch_by_activity_key,
+        activity_dictionary_rows,
+        activity_row_count_sum,
+    ) = _load_activity_dictionary()
+    (
+        variable_keys,
+        variable_dictionary_rows,
+        variable_row_count_sum,
+    ) = _load_dictionary_keys(
+        GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH,
+        VARIABLE_DICTIONARY_FIELDNAMES,
+        "variable_key",
     )
 
     rows, fiscal_years, branch_counts, panel_failures = _validate_tidy_panel(
         source_keys,
         activity_keys,
+        variable_keys,
+        fiscal_year_by_source_key,
+        branch_by_activity_key,
     )
     failures.extend(panel_failures)
     if rows != expected_rows:
@@ -221,6 +287,11 @@ def main() -> None:
             "Activity dictionary row_count sum differs from tidy panel rows: "
             f"dictionary={activity_row_count_sum} panel={rows}"
         )
+    if variable_row_count_sum != rows:
+        failures.append(
+            "Variable dictionary row_count sum differs from tidy panel rows: "
+            f"dictionary={variable_row_count_sum} panel={rows}"
+        )
     if fiscal_years != EXPECTED_FISCAL_YEARS:
         failures.append(
             "Tidy panel fiscal-year coverage differs from expected 1997-2022: "
@@ -234,6 +305,8 @@ def main() -> None:
     ):
         if legacy_path.exists():
             warnings.append(f"Stale legacy full CSV still exists locally: {legacy_path}")
+    for gzip_path in sorted(ANALYSIS_DATA_DIR.glob("*afip_ganancias_sociedades*.csv.gz")):
+        warnings.append(f"Stale compressed analysis CSV still exists locally: {gzip_path}")
 
     VALIDATION_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     _write_branch_detail(branch_counts)
@@ -245,6 +318,7 @@ def main() -> None:
         report_file.write(f"- github_blob_limit_bytes: {MAX_GITHUB_BLOB_BYTES}\n")
         report_file.write(f"- source_dictionary_rows: {source_dictionary_rows}\n")
         report_file.write(f"- activity_dictionary_rows: {activity_dictionary_rows}\n")
+        report_file.write(f"- variable_dictionary_rows: {variable_dictionary_rows}\n")
         report_file.write(f"- fiscal_years: {min(fiscal_years)}-{max(fiscal_years)}\n")
         report_file.write(f"- detail_counts_csv: {DETAIL_PATH}\n\n")
         report_file.write(f"## Failures ({len(failures)})\n")
@@ -262,6 +336,7 @@ def main() -> None:
     print(f"tidy_bytes={output_size}")
     print(f"source_dictionary_rows={source_dictionary_rows}")
     print(f"activity_dictionary_rows={activity_dictionary_rows}")
+    print(f"variable_dictionary_rows={variable_dictionary_rows}")
     if failures:
         raise SystemExit(1)
 
