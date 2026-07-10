@@ -109,12 +109,12 @@ python3 command-files/run_all.py
 
 Resultado final validado:
 
-- Panel tidy homologado: `data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`.
-- Filas del panel: 819.867.
-- Tamano sin comprimir validado: 36.749.414 bytes.
-- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv`.
-- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv`.
-- Diccionario de variable: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv`.
+- Panel analitico homologado: `data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv`.
+- Filas del panel: 341.103.
+- Tamano sin comprimir validado: 81.500.612 bytes.
+- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_source_dictionary.csv`.
+- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_activity_dictionary.csv`.
+- Diccionario de variable: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_variable_dictionary.csv`.
 - Validacion final: 0 fallas.
 
 ## 3. Homologacion De Ramas Economicas
@@ -143,22 +143,42 @@ Decision metodologica:
   equivalentes directos.
 - La homologacion fina entre actividades de 3 digitos queda como etapa
   metodologica posterior.
+- El panel analitico conserva la rama original en `rama_original_codigo`,
+  `rama_original_nombre`, `rama_original_nivel` y `clasificador_actividad`.
+  La columna `rama_homologada_codigo` solo agrega una capa comparable de rama
+  amplia.
+
+Criterio operativo:
+
+- Para el clasificador nuevo, la rama homologada se asigna desde la letra de
+  seccion original (`A`, `B`, `C`, etc.) observada en la actividad o en la
+  seccion fuente.
+- Para el clasificador viejo, la rama homologada se asigna desde la letra de
+  seccion original del clasificador viejo. Las letras no se interpretan como
+  equivalentes directas al clasificador nuevo; se mapean hacia ramas amplias.
+- Para fiscal year 1997 y otras filas de actividad amplia, la homologacion usa
+  la etiqueta/codigo amplio publicado por la fuente.
+- Las actividades residuales o no especificadas se agrupan en
+  `OTRAS_NO_ESPECIFICADAS`.
+- Las filas `TOTAL` existen como categoria de control en la homologacion, pero
+  se excluyen del panel final de analisis para no mezclar agregados con ramas
+  economicas.
 
 Ramas comunes:
 
-| `rama_comun_codigo` | Criterio de agrupacion |
-|---|---|
-| `AGRICULTURA_PESCA` | Agricultura, ganaderia, caza, silvicultura y pesca |
-| `MINAS_CANTERAS` | Explotacion de minas y canteras |
-| `INDUSTRIA_MANUFACTURERA` | Industria manufacturera |
-| `ELECTRICIDAD_GAS_AGUA` | Electricidad, gas, agua y saneamiento |
-| `CONSTRUCCION` | Construccion |
-| `COMERCIO_HOTELES_RESTAURANTES` | Comercio, hoteles y restaurantes |
-| `TRANSPORTE_COMUNICACIONES` | Transporte, almacenamiento y comunicaciones |
-| `FINANZAS_INMUEBLES_SERVICIOS_EMPRESARIALES` | Finanzas, seguros, inmuebles y servicios empresariales |
-| `SERVICIOS_SOCIALES_PERSONALES_PUBLICOS` | Administracion publica, ensenanza, salud y otros servicios |
-| `OTRAS_NO_ESPECIFICADAS` | Otras actividades o actividades no especificadas |
-| `TOTAL` | Total fuente |
+| `rama_comun_codigo` | Clasificador nuevo | Clasificador viejo | Actividad amplia/P6 |
+|---|---|---|---|
+| `AGRICULTURA_PESCA` | A | A+B | Agricultura, caza, silvicultura y pesca |
+| `MINAS_CANTERAS` | B | C | Explotacion de minas y canteras |
+| `INDUSTRIA_MANUFACTURERA` | C | D | Industrias manufactureras |
+| `ELECTRICIDAD_GAS_AGUA` | D+E | E | Electricidad, gas y agua |
+| `CONSTRUCCION` | F | F | Construccion |
+| `COMERCIO_HOTELES_RESTAURANTES` | G+I | G+H | Comercio, restaurantes y hoteles |
+| `TRANSPORTE_COMUNICACIONES` | H+J | I | Transporte, almacenamiento y comunicaciones |
+| `FINANZAS_INMUEBLES_SERVICIOS_EMPRESARIALES` | K+L+M+N | J+K | Finanzas, seguros, inmuebles y servicios empresariales |
+| `SERVICIOS_SOCIALES_PERSONALES_PUBLICOS` | O+P+Q+R+S | L+M+N+O | Servicios comunales, sociales y personales |
+| `OTRAS_NO_ESPECIFICADAS` | Otras/no especificadas | Otras/no especificadas | Actividades no bien especificadas |
+| `TOTAL` | Total fuente | Total fuente | Total fuente |
 
 El criterio completo esta documentado en:
 
@@ -175,31 +195,79 @@ Orden fisico de los datos:
    P0, P1, P2, P3, P4, P5 y P6.
 3. Dentro de cada periodo se conserva el orden producido por los extractores:
    fuente, cuadro, dimension y variable.
-4. El panel final queda como CSV sin comprimir y separa metadatos largos en
-   diccionarios de fuente, actividad y variable.
+4. El panel final queda como CSV sin comprimir con columnas analiticas directas:
+   anio fiscal, rama original, rama homologada, variable economica y valor.
 5. Para analisis no debe dependerse del orden fisico del CSV; usar
    identificadores canonicos.
 
 Identificadores recomendados:
 
-- `source_key`
-- `activity_key`
-- `variable_key`
+- `fiscal_year`
+- `rama_original_codigo`
+- `rama_original_nivel`
+- `clasificador_actividad`
+- `variable_grupo`
+- `variable_nombre`
 
-Para recuperar anio, cuadro, actividad, rama homologada y nombre de variable,
-unir el panel con los diccionarios correspondientes.
+### Libro De Codigos Del Panel Final
 
-Diccionario de columnas:
+Archivo:
+
+```text
+data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv
+```
+
+El panel final de `analysis-data` excluye metadatos tecnicos de extraccion y
+conserva solo campos directamente utiles para analisis estadistico. Esta en
+formato largo: cada fila representa una observacion monetaria para una rama de
+actividad y una variable economica en un anio fiscal.
+
+Unidad de observacion:
+
+```text
+fiscal_year x rama_original_codigo x rama_original_nivel x clasificador_actividad x variable_grupo x variable_nombre
+```
+
+Uso recomendado:
+
+- Usar `fiscal_year` como eje temporal del analisis.
+- Usar `rama_original_*` cuando se quiera trabajar con el maximo detalle
+  sectorial disponible en cada anio.
+- Usar `rama_homologada_*` cuando se quiera comparar ramas amplias a lo largo
+  de toda la serie 1997-2022.
+- Usar siempre `variable_grupo` junto con `variable_nombre`; algunos nombres de
+  variable aparecen en mas de un contexto economico.
+- Usar `valor_pesos_corrientes` como valor monetario principal. La serie esta
+  expresada en pesos corrientes; cualquier deflactacion debe hacerse en una
+  etapa posterior.
+- No sumar automaticamente niveles distintos de `rama_original_nivel`, porque
+  secciones, actividades de 3 digitos y actividades amplias no tienen el mismo
+  nivel de agregacion.
 
 | Columna | Descripcion |
 |---|---|
-| `source_key` | Llave hacia el diccionario de fuente. |
-| `activity_key` | Llave hacia el diccionario de actividad/homologacion. |
-| `variable_key` | Llave hacia el diccionario de variables. |
-| `value` | Valor normalizado como texto/decimal segun fuente. |
-| `value_pesos_current` | Monto monetario convertido a pesos corrientes cuando aplica. |
-| `source_row_zero_based` | Fila fuente de la celda extraida, base cero. |
-| `source_column_zero_based` | Columna fuente de la celda extraida, base cero. |
+| `fiscal_year` | Anio fiscal informado por la fuente. Es el identificador temporal principal. |
+| `rama_original_codigo` | Codigo original de actividad economica observado en AFIP/ARCA. Puede ser codigo de actividad, seccion, rama amplia o residual. |
+| `rama_original_nombre` | Etiqueta original de actividad economica publicada por la fuente. |
+| `rama_original_nivel` | Nivel de desagregacion de la rama original: `activity_3digit`, `broad_activity`, `section` u `other_activity`. Permite distinguir detalle fino de agregados amplios. |
+| `clasificador_actividad` | Clasificador de actividad de origen: `new` u `old`. No debe asumirse equivalencia directa entre codigos de 3 digitos de ambos clasificadores. |
+| `rama_homologada_codigo` | Rama amplia comparable para toda la serie 1997-2022. Es la variable recomendada para analisis historico de largo plazo por grandes ramas. |
+| `rama_homologada_nombre` | Etiqueta legible de la rama amplia homologada. |
+| `variable_grupo` | Bloque economico al que pertenece la variable, por ejemplo ventas/costos, gastos operativos, activo, pasivo, patrimonio, resultado impositivo o determinacion del impuesto. |
+| `variable_nombre` | Nombre canonico de la variable monetaria. Debe interpretarse junto con `variable_grupo` cuando haya componentes repetidos en distintos cuadros. |
+| `valor_pesos_corrientes` | Valor monetario normalizado a pesos corrientes. No esta deflactado ni expresado en moneda constante. |
+
+Decisiones de empaquetado:
+
+- Se excluyen variables de conteo/casos y `presentaciones_*`.
+- Se excluyen filas `TOTAL` para evitar mezclar agregados con ramas.
+- Se conserva el maximo detalle sectorial disponible por cuadro y anio.
+- Cuando un mismo `variable_nombre` aparece en contextos economicos distintos,
+  `variable_grupo` diferencia la observacion analitica.
+- Las filas `other_activity` agrupan actividades residuales o no especificadas
+  de la fuente y se homologan como `OTRAS_NO_ESPECIFICADAS`.
+- La homologacion de ramas es amplia; no resuelve una correspondencia fina de
+  actividades a 3 digitos entre clasificadores viejo y nuevo.
 
 Columnas del diccionario de fuente:
 

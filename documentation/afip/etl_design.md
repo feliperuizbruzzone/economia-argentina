@@ -31,7 +31,7 @@ preservando el maximo nivel de desagregacion disponible en cada periodo.
 Salida final actual:
 
 ```text
-data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv
+data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv
 ```
 
 ## Columnas Canonicas
@@ -62,19 +62,22 @@ Campos minimos de la base larga:
 - `header_start_row_zero_based`
 - `data_start_row_zero_based`
 
-El CSV final versionable usa una tabla de hechos mas compacta para quedar por
+El CSV final versionable usa una estructura analitica directa y queda por
 debajo de 100 MB sin compresion. Esa tabla conserva:
 
-- `source_key`
-- `activity_key`
-- `variable_key`
-- `value`
-- `value_pesos_current`
-- `source_row_zero_based`
-- `source_column_zero_based`
+- `fiscal_year`
+- `rama_original_codigo`
+- `rama_original_nombre`
+- `rama_original_nivel`
+- `clasificador_actividad`
+- `rama_homologada_codigo`
+- `rama_homologada_nombre`
+- `variable_grupo`
+- `variable_nombre`
+- `valor_pesos_corrientes`
 
-Los campos largos de fuente, actividad, homologacion y variable se recuperan
-desde los diccionarios generados en `data/intermediate-data/afip-estadisticas-tributarias/`.
+Los campos largos de fuente, rutas internas y notas de extraccion se conservan
+en diccionarios regenerables bajo `data/intermediate-data/afip-estadisticas-tributarias/`.
 
 ## Funciones Modulares Propuestas
 
@@ -1017,19 +1020,20 @@ python3 command-files/processing-command-files/68_validate_ganancias_sociedades_
 Outputs:
 
 ```text
-data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
+data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_source_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_activity_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_variable_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
 data/output-data/validation_reports/ganancias_sociedades_tidy_outputs_validation.md
 ```
 
-The final panel is a compact uncompressed tidy CSV designed to be versionable
-on GitHub. Long source strings, activity labels, harmonization fields and
-variable metadata are preserved in intermediate dictionaries keyed by
-`source_key`, `activity_key` and `variable_key`. The harmonization layer does
-not claim direct 3-digit equivalence between the old and new classifiers.
+The final panel is an uncompressed analytic CSV designed to be versionable on
+GitHub. It includes fiscal year, original activity branch, homologated branch,
+economic variable group, economic variable name and current-peso value. Long
+source strings and technical extraction metadata are preserved in intermediate
+dictionaries. The harmonization layer does not claim direct 3-digit equivalence
+between the old and new classifiers.
 
 Current P0 inventory scope:
 

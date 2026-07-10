@@ -1,9 +1,10 @@
-"""Build the shareable tidy AFIP Ganancias Sociedades panel and dictionaries."""
+"""Build the analytic AFIP Ganancias Sociedades panel and dictionaries."""
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 import csv
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 import re
 import sys
@@ -46,13 +47,16 @@ COMPONENT_PATHS = (
 )
 
 TIDY_FIELDNAMES = [
-    "source_key",
-    "activity_key",
-    "variable_key",
-    "value",
-    "value_pesos_current",
-    "source_row_zero_based",
-    "source_column_zero_based",
+    "fiscal_year",
+    "rama_original_codigo",
+    "rama_original_nombre",
+    "rama_original_nivel",
+    "clasificador_actividad",
+    "rama_homologada_codigo",
+    "rama_homologada_nombre",
+    "variable_grupo",
+    "variable_nombre",
+    "valor_pesos_corrientes",
 ]
 
 SOURCE_DICTIONARY_FIELDNAMES = [
@@ -123,6 +127,24 @@ COMMON_BRANCH_LABELS = {
     "OTRAS_NO_ESPECIFICADAS": "Otras actividades o actividades no especificadas",
     "NO_HOMOLOGADO": "No homologado",
 }
+
+VARIABLE_GROUP_LABELS = {
+    "resumen_presentaciones_ventas_impuesto": "resumen_presentaciones_ventas_impuesto",
+    "estado_resultados": "estado_resultados",
+    "resultado_impositivo": "resultado_impositivo",
+    "determinacion_impuesto": "determinacion_impuesto",
+    "situacion_patrimonial": "situacion_patrimonial",
+}
+
+# DECISION: pick one analytical source for variables duplicated across table
+# families. `impuesto_determinado` is kept from the summary table because it is
+# the only source with full 1997-2022 coverage.
+CANONICAL_TABLE_FAMILY_BY_VARIABLE = {
+    "ventas_bienes_servicios_locaciones_netas": "estado_resultados",
+    "impuesto_determinado": "resumen_presentaciones_ventas_impuesto",
+}
+
+MONEY_QUANT = Decimal("0.01")
 
 NEW_SECTION_TO_COMMON = {
     "A": "AGRICULTURA_PESCA",
@@ -356,6 +378,141 @@ def _make_key(prefix: str, number: int) -> str:
     return f"{prefix}{number:06d}"
 
 
+def _is_monetary_row(row: dict[str, str]) -> bool:
+    return row["unit_original"] != "casos" and bool(row["value_pesos_current"].strip())
+
+
+def _collect_detail_levels() -> dict[tuple[str, str, str], set[str]]:
+    source_fieldnames = long_fieldnames()
+    levels: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+    for path in COMPONENT_PATHS:
+        with path.open(encoding="utf-8") as input_file:
+            reader = csv.DictReader(input_file)
+            if reader.fieldnames != source_fieldnames:
+                raise ValueError(f"Unexpected fieldnames in {path}")
+            for row in reader:
+                if not _is_monetary_row(row):
+                    continue
+                key = (row["fiscal_year"], row["source_table_id"], row["table_family"])
+                levels[key].add(row["activity_level"])
+    return levels
+
+
+def _keep_maximum_activity_detail(
+    row: dict[str, str],
+    detail_levels: dict[tuple[str, str, str], set[str]],
+) -> bool:
+    if _is_total(row):
+        return False
+    key = (row["fiscal_year"], row["source_table_id"], row["table_family"])
+    levels = detail_levels[key]
+    level = row["activity_level"]
+    if "activity_3digit" in levels:
+        return level in {"activity_3digit", "other_activity"}
+    if "broad_activity" in levels:
+        return level in {"broad_activity", "other_activity"}
+    if "section" in levels:
+        return level in {"section", "other_activity"}
+    return False
+
+
+def _keep_canonical_variable_source(row: dict[str, str]) -> bool:
+    canonical_family = CANONICAL_TABLE_FAMILY_BY_VARIABLE.get(row["variable_name"])
+    return canonical_family is None or row["table_family"] == canonical_family
+
+
+def _format_money(value: str) -> str:
+    try:
+        number = Decimal(value).quantize(MONEY_QUANT, rounding=ROUND_HALF_UP)
+    except InvalidOperation as exc:
+        raise ValueError(f"Could not parse monetary value: {value}") from exc
+    return format(number, "f")
+
+
+def _variable_group(row: dict[str, str]) -> str:
+    title = normalize_text(row["source_table_title"])
+    table_family = row["table_family"]
+    if table_family == "resumen_presentaciones_ventas_impuesto":
+        return "resumen_ventas_ganancia_impuesto"
+    if table_family == "determinacion_impuesto":
+        return "determinacion_impuesto"
+    if table_family == "resultado_impositivo":
+        return "resultado_impositivo"
+    if table_family == "estado_resultados":
+        if "GASTOS VINCULADOS AL COSTO" in title:
+            return "estado_resultados_gastos_vinculados_al_costo"
+        if "VENTAS LOCALES" in title or "EXPORTACIONES" in title:
+            return "estado_resultados_ventas_exportaciones"
+        if "VENTAS DE BIENES" in title and "COSTOS" in title:
+            return "estado_resultados_ventas_costos"
+        if "RESULTADO BRUTO" in title:
+            return "estado_resultados_resultado_bruto_gastos_operativos"
+        if "GASTOS OPERATIVOS" in title:
+            return "estado_resultados_gastos_operativos_detalle"
+        if "INVERSIONES PERMANENTES" in title or "RESULTADOS FINANCIEROS" in title:
+            return "estado_resultados_resultados_financieros_otros"
+        if "RESULTADOS EXTRAORDINARIOS" in title or "RESULTADO CONTABLE" in title:
+            return "estado_resultados_resultado_contable"
+        return "estado_resultados_compacto"
+    if table_family == "situacion_patrimonial":
+        if "DISPONIBILIDADES" in title:
+            return "situacion_patrimonial_activo_disponibilidades"
+        if "CREDITOS" in title:
+            return "situacion_patrimonial_activo_creditos"
+        if "BIENES DE CAMBIO" in title:
+            return "situacion_patrimonial_activo_bienes_cambio"
+        if "BIENES DE USO" in title:
+            return "situacion_patrimonial_activo_bienes_uso"
+        if "ACTIVO" in title:
+            return "situacion_patrimonial_activo"
+        if "DEUDAS" in title:
+            return "situacion_patrimonial_pasivo_deudas"
+        if "PASIVO" in title:
+            return "situacion_patrimonial_pasivo"
+        if "AUMENTOS" in title:
+            return "situacion_patrimonial_patrimonio_aumentos"
+        if "DISMINUCIONES" in title:
+            return "situacion_patrimonial_patrimonio_disminuciones"
+        if "PATRIMONIO NETO" in title:
+            return "situacion_patrimonial_patrimonio_neto"
+        return "situacion_patrimonial_compacto"
+    return VARIABLE_GROUP_LABELS.get(table_family, table_family)
+
+
+def _analysis_key(
+    row: dict[str, str],
+    harmonized: dict[str, str],
+) -> tuple[str, ...]:
+    return (
+        row["fiscal_year"],
+        row["activity_code"],
+        row["activity_label_original"],
+        row["activity_level"],
+        row["classifier_period"],
+        harmonized["rama_comun_codigo"],
+        _variable_group(row),
+        row["variable_name"],
+    )
+
+
+def _analysis_output_row(
+    row: dict[str, str],
+    harmonized: dict[str, str],
+) -> dict[str, str]:
+    return {
+        "fiscal_year": row["fiscal_year"],
+        "rama_original_codigo": row["activity_code"],
+        "rama_original_nombre": row["activity_label_original"],
+        "rama_original_nivel": row["activity_level"],
+        "clasificador_actividad": row["classifier_period"],
+        "rama_homologada_codigo": harmonized["rama_comun_codigo"],
+        "rama_homologada_nombre": harmonized["rama_comun_label"],
+        "variable_grupo": _variable_group(row),
+        "variable_nombre": row["variable_name"],
+        "valor_pesos_corrientes": _format_money(row["value_pesos_current"]),
+    }
+
+
 def _write_tidy_panel(
     source_key_by_tuple: dict[tuple[str, ...], str],
     source_rows: dict[str, dict[str, str | int]],
@@ -363,11 +520,94 @@ def _write_tidy_panel(
     activity_rows: dict[str, dict[str, str | int | set[str]]],
     variable_key_by_tuple: dict[tuple[str, str], str],
     variable_rows: dict[str, dict[str, str | int]],
-) -> tuple[int, Counter[str], Counter[str]]:
+) -> tuple[int, Counter[str], Counter[str], int, int]:
     source_fieldnames = long_fieldnames()
-    total_rows = 0
+    detail_levels = _collect_detail_levels()
+    output_rows: dict[tuple[str, ...], dict[str, str]] = {}
     status_counts: Counter[str] = Counter()
     branch_counts: Counter[str] = Counter()
+    collapsed_duplicates = 0
+    duplicate_conflicts = 0
+
+    for path in COMPONENT_PATHS:
+        with path.open(encoding="utf-8") as input_file:
+            reader = csv.DictReader(input_file)
+            if reader.fieldnames != source_fieldnames:
+                raise ValueError(f"Unexpected fieldnames in {path}")
+            for row in reader:
+                if not _is_monetary_row(row):
+                    continue
+                if not _keep_maximum_activity_detail(row, detail_levels):
+                    continue
+                if not _keep_canonical_variable_source(row):
+                    continue
+
+                harmonized = _homologate_row(row)
+                if harmonized["rama_comun_codigo"] == "NO_HOMOLOGADO":
+                    raise ValueError(f"Unmapped branch in row: {row}")
+                key = _analysis_key(row, harmonized)
+                output_row = _analysis_output_row(row, harmonized)
+                existing = output_rows.get(key)
+                if existing is not None:
+                    collapsed_duplicates += 1
+                    if (
+                        existing["valor_pesos_corrientes"]
+                        != output_row["valor_pesos_corrientes"]
+                    ):
+                        duplicate_conflicts += 1
+                    continue
+                output_rows[key] = output_row
+
+                source_tuple = _source_tuple(row)
+                source_key = source_key_by_tuple.get(source_tuple)
+                if source_key is None:
+                    source_key = _make_key("S", len(source_key_by_tuple) + 1)
+                    source_key_by_tuple[source_tuple] = source_key
+                    source_rows[source_key] = {
+                        "source_key": source_key,
+                        **{
+                            field: row[field]
+                            for field in SOURCE_DICTIONARY_FIELDNAMES[1:-1]
+                        },
+                        "row_count": 0,
+                    }
+                source_rows[source_key]["row_count"] += 1  # type: ignore[operator]
+
+                activity_tuple = _activity_tuple(row, harmonized)
+                activity_key = activity_key_by_tuple.get(activity_tuple)
+                if activity_key is None:
+                    activity_key = _make_key("A", len(activity_key_by_tuple) + 1)
+                    activity_key_by_tuple[activity_tuple] = activity_key
+                    activity_rows[activity_key] = {
+                        "activity_key": activity_key,
+                        "rama_homologacion_version": HARMONIZATION_VERSION,
+                        "classifier_period": row["classifier_period"],
+                        "activity_level": row["activity_level"],
+                        "activity_code": row["activity_code"],
+                        "activity_label_original": row["activity_label_original"],
+                        "activity_section_original": row["activity_section_original"],
+                        **harmonized,
+                        "years": set(),
+                        "row_count": 0,
+                    }
+                activity_rows[activity_key]["years"].add(row["fiscal_year"])  # type: ignore[union-attr]
+                activity_rows[activity_key]["row_count"] += 1  # type: ignore[operator]
+
+                variable_tuple = (row["variable_name"], row["unit_original"])
+                variable_key = variable_key_by_tuple.get(variable_tuple)
+                if variable_key is None:
+                    variable_key = _make_key("V", len(variable_key_by_tuple) + 1)
+                    variable_key_by_tuple[variable_tuple] = variable_key
+                    variable_rows[variable_key] = {
+                        "variable_key": variable_key,
+                        "variable_name": row["variable_name"],
+                        "unit_original": row["unit_original"],
+                        "row_count": 0,
+                    }
+                variable_rows[variable_key]["row_count"] += 1  # type: ignore[operator]
+
+                status_counts[harmonized["rama_homologacion_estado"]] += 1
+                branch_counts[harmonized["rama_comun_codigo"]] += 1
 
     GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.parent.mkdir(parents=True, exist_ok=True)
     with GANANCIAS_SOCIEDADES_TIDY_HARMONIZED_PATH.open(
@@ -377,82 +617,15 @@ def _write_tidy_panel(
     ) as output_file:
         writer = csv.DictWriter(output_file, fieldnames=TIDY_FIELDNAMES)
         writer.writeheader()
-        for path in COMPONENT_PATHS:
-            with path.open(encoding="utf-8") as input_file:
-                reader = csv.DictReader(input_file)
-                if reader.fieldnames != source_fieldnames:
-                    raise ValueError(f"Unexpected fieldnames in {path}")
-                for row in reader:
-                    harmonized = _homologate_row(row)
+        writer.writerows(output_rows[key] for key in sorted(output_rows))
 
-                    source_tuple = _source_tuple(row)
-                    source_key = source_key_by_tuple.get(source_tuple)
-                    if source_key is None:
-                        source_key = _make_key("S", len(source_key_by_tuple) + 1)
-                        source_key_by_tuple[source_tuple] = source_key
-                        source_rows[source_key] = {
-                            "source_key": source_key,
-                            **{
-                                field: row[field]
-                                for field in SOURCE_DICTIONARY_FIELDNAMES[1:-1]
-                            },
-                            "row_count": 0,
-                        }
-                    source_rows[source_key]["row_count"] += 1  # type: ignore[operator]
-
-                    activity_tuple = _activity_tuple(row, harmonized)
-                    activity_key = activity_key_by_tuple.get(activity_tuple)
-                    if activity_key is None:
-                        activity_key = _make_key("A", len(activity_key_by_tuple) + 1)
-                        activity_key_by_tuple[activity_tuple] = activity_key
-                        activity_rows[activity_key] = {
-                            "activity_key": activity_key,
-                            "rama_homologacion_version": HARMONIZATION_VERSION,
-                            "classifier_period": row["classifier_period"],
-                            "activity_level": row["activity_level"],
-                            "activity_code": row["activity_code"],
-                            "activity_label_original": row["activity_label_original"],
-                            "activity_section_original": row[
-                                "activity_section_original"
-                            ],
-                            **harmonized,
-                            "years": set(),
-                            "row_count": 0,
-                        }
-                    activity_rows[activity_key]["years"].add(row["fiscal_year"])  # type: ignore[union-attr]
-                    activity_rows[activity_key]["row_count"] += 1  # type: ignore[operator]
-
-                    variable_tuple = (row["variable_name"], row["unit_original"])
-                    variable_key = variable_key_by_tuple.get(variable_tuple)
-                    if variable_key is None:
-                        variable_key = _make_key("V", len(variable_key_by_tuple) + 1)
-                        variable_key_by_tuple[variable_tuple] = variable_key
-                        variable_rows[variable_key] = {
-                            "variable_key": variable_key,
-                            "variable_name": row["variable_name"],
-                            "unit_original": row["unit_original"],
-                            "row_count": 0,
-                        }
-                    variable_rows[variable_key]["row_count"] += 1  # type: ignore[operator]
-
-                    writer.writerow(
-                        {
-                            "source_key": source_key,
-                            "activity_key": activity_key,
-                            "variable_key": variable_key,
-                            "value": row["value"],
-                            "value_pesos_current": row["value_pesos_current"],
-                            "source_row_zero_based": row["source_row_zero_based"],
-                            "source_column_zero_based": row[
-                                "source_column_zero_based"
-                            ],
-                        }
-                    )
-                    total_rows += 1
-                    status_counts[harmonized["rama_homologacion_estado"]] += 1
-                    branch_counts[harmonized["rama_comun_codigo"]] += 1
-
-    return total_rows, status_counts, branch_counts
+    return (
+        len(output_rows),
+        status_counts,
+        branch_counts,
+        collapsed_duplicates,
+        duplicate_conflicts,
+    )
 
 
 def _write_source_dictionary(rows_by_key: dict[str, dict[str, str | int]]) -> None:
@@ -522,7 +695,7 @@ def _write_variable_dictionary(rows_by_key: dict[str, dict[str, str | int]]) -> 
 
 
 def main() -> None:
-    """Build a compact final panel and dictionaries from validated P0-P6 extracts."""
+    """Build an analysis-ready monetary panel from validated P0-P6 extracts."""
 
     source_key_by_tuple: dict[tuple[str, ...], str] = {}
     source_rows: dict[str, dict[str, str | int]] = {}
@@ -531,7 +704,13 @@ def main() -> None:
     variable_key_by_tuple: dict[tuple[str, str], str] = {}
     variable_rows: dict[str, dict[str, str | int]] = {}
 
-    total_rows, status_counts, branch_counts = _write_tidy_panel(
+    (
+        total_rows,
+        status_counts,
+        branch_counts,
+        collapsed_duplicates,
+        duplicate_conflicts,
+    ) = _write_tidy_panel(
         source_key_by_tuple,
         source_rows,
         activity_key_by_tuple,
@@ -553,6 +732,8 @@ def main() -> None:
     print(f"variable_dictionary={GANANCIAS_SOCIEDADES_VARIABLE_DICTIONARY_PATH}")
     print(f"variable_dictionary_rows={len(variable_rows)}")
     print(f"branch_dictionary={GANANCIAS_SOCIEDADES_BRANCH_HARMONIZATION_DICTIONARY_PATH}")
+    print(f"collapsed_duplicate_source_rows={collapsed_duplicates}")
+    print(f"duplicate_value_conflicts_after_rounding={duplicate_conflicts}")
     print(f"status_counts={dict(sorted(status_counts.items()))}")
     print(f"common_branch_counts={dict(sorted(branch_counts.items()))}")
 

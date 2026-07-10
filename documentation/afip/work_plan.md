@@ -248,13 +248,13 @@ python3 command-files/processing-command-files/68_validate_ganancias_sociedades_
 
 Resultados actuales:
 
-- Panel tidy homologado: `data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv`.
-- El panel tiene 819.867 filas, cobertura fiscal 1997-2022 y pesa 36.749.414 bytes sin comprimir.
-- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv`.
-- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv`.
-- Diccionario de variable: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv`.
-- Diccionario de homologacion: `data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv`.
+- Panel analitico homologado: `data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv`.
+- El panel tiene 341.103 filas monetarias, cobertura fiscal 1997-2022 y pesa 81.500.612 bytes sin comprimir.
+- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_source_dictionary.csv`.
+- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_activity_dictionary.csv`.
+- Diccionario de variable: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_variable_dictionary.csv`.
+- Diccionario de homologacion: `data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv`.
 - Validacion final: 0 fallas y 0 advertencias.
-- La homologacion agrega `rama_comun_codigo` para comparabilidad amplia y `rama_detalle_homologada_codigo` para conservar detalle fuente por clasificador; etiquetas, rutas largas y nombres de variables viven en diccionarios.
+- La salida final excluye variables de casos/presentaciones y filas `TOTAL`; conserva el maximo detalle sectorial disponible y agrega columnas directas de rama original, rama homologada, grupo de variable y valor en pesos corrientes.
 
 Siguiente paso metodologico: decidir si se construira una correspondencia fina de actividades a 3 digitos entre clasificador viejo y nuevo o si el analisis se hara sobre ramas comunes amplias.

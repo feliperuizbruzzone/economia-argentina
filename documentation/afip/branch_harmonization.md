@@ -12,11 +12,11 @@ modifica columnas fuente: conserva `activity_level`, `activity_code`,
 Salidas vigentes:
 
 ```text
-data/analysis-data/2026-07-10_afip_ganancias_sociedades_tidy_homologado.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_source_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_activity_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_variable_dictionary.csv
-data/intermediate-data/afip-estadisticas-tributarias/2026-07-10_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
+data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_source_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_activity_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_variable_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/20260710_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
 data/output-data/validation_reports/ganancias_sociedades_tidy_outputs_validation.md
 data/output-data/validation_reports/ganancias_sociedades_tidy_branch_counts.csv
 ```
@@ -69,13 +69,13 @@ posterior si se requiere una serie sectorial fina empalmada.
 
 La validacion `68_validate_ganancias_sociedades_tidy_outputs.py` confirma:
 
-- 819.867 filas en el panel tidy homologado.
-- tamano sin comprimir de 36.749.414 bytes, menor al limite normal de GitHub.
+- 341.103 filas monetarias en el panel analitico homologado.
+- tamano sin comprimir de 81.500.612 bytes, menor al limite normal de GitHub.
 - cobertura fiscal 1997-2022 completa.
 - 0 filas `NO_HOMOLOGADO`.
 - 320 entradas en el diccionario de fuente.
-- 569 entradas en el diccionario de actividad/ramas.
-- 306 entradas en el diccionario de variables.
+- 546 entradas en el diccionario de actividad/ramas.
+- 185 entradas en el diccionario de variables.
 
 Advertencia metodologica: la homologacion preserva filas y agrega ramas comunes
 amplias; los codigos de 3 digitos viejo/nuevo siguen siendo especificos de su
