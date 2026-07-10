@@ -17,10 +17,8 @@ fiscal year 2012, con 27.208 filas largas y validacion de 0 fallas y 0
 advertencias. El periodo `P3_old_html_detail_thousands` esta implementado
 para publication years 2009-2012 / fiscal years 2008-2011, con 97.775 filas
 largas, validacion de 0 fallas y 10 advertencias estructurales. Las
-advertencias y notas de periodo quedan documentadas en
-`documentation/afip_p0_backward_warnings.md`,
-`documentation/afip_p1_warnings.md`, `documentation/afip_p2_warnings.md` y
-`documentation/afip_p3_warnings.md`.
+advertencias y notas de periodo P0-P6 quedan documentadas en
+`documentation/afip/warnings_by_period.md`.
 
 Las secciones de probes iniciales que siguen quedan como historial de
 desarrollo incremental; el estado operativo vigente es el resumido arriba.
@@ -756,7 +754,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_p
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_p0_backward_detector_probe.csv
 data/output-data/validation_reports/ganancias_sociedades_p0_backward_inventory_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p0_backward_detector_probe.md
-documentation/afip_p0_backward_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -796,7 +794,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p1.csv
 data/output-data/validation_reports/ganancias_sociedades_p1_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p1_long_counts.csv
-documentation/afip_p1_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -832,7 +830,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p2.csv
 data/output-data/validation_reports/ganancias_sociedades_p2_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p2_long_counts.csv
-documentation/afip_p2_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -869,7 +867,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p3.csv
 data/output-data/validation_reports/ganancias_sociedades_p3_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p3_long_counts.csv
-documentation/afip_p3_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -906,7 +904,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p4.csv
 data/output-data/validation_reports/ganancias_sociedades_p4_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p4_long_counts.csv
-documentation/afip_p4_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -944,7 +942,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p5.csv
 data/output-data/validation_reports/ganancias_sociedades_p5_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p5_long_counts.csv
-documentation/afip_p5_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:
@@ -981,7 +979,7 @@ data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_i
 data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p6.csv
 data/output-data/validation_reports/ganancias_sociedades_p6_long_validation.md
 data/output-data/validation_reports/ganancias_sociedades_p6_long_counts.csv
-documentation/afip_p6_warnings.md
+documentation/afip/warnings_by_period.md
 ```
 
 Current result:

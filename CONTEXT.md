@@ -64,8 +64,8 @@ Caracteristicas conocidas de la fuente:
 
 Inventario estructural preliminar:
 
-- `documentation/afip_archive_inventory.md`
-- `documentation/afip_structural_mapping.yml`
+- `documentation/afip/archive_inventory.md`
+- `documentation/afip/structural_mapping.yml`
 
 Epocas estructurales propuestas:
 
@@ -90,6 +90,15 @@ El repositorio separa comandos, datos, documentacion y resultados:
 - `data/output-data/`: resultados derivados.
 - `documentation/`: documentacion metodologica y operativa.
 - `tests/`: pruebas y validaciones.
+
+Criterio vigente para `documentation/`: los documentos especificos de una
+fuente deben vivir en `documentation/<fuente>/`. Dentro de esa subcarpeta se
+elimina el prefijo redundante del nombre de archivo; por ejemplo, los antiguos
+`afip_*.md` fueron movidos a `documentation/afip/` como `work_plan.md`,
+`etl_design.md`, `variable_comparability.md`, etc. Las advertencias de periodos
+homogeneos de una misma fuente deben consolidarse en un unico archivo por
+fuente, actualmente `documentation/afip/warnings_by_period.md`, salvo que haya
+una razon metodologica fuerte para mantenerlas separadas.
 
 ## 5. Entorno Tecnico
 
@@ -158,27 +167,27 @@ El directorio contiene el andamiaje TIER inicial y los datos crudos AFIP:
 - La validacion consolidada P0 (`45_validate_ganancias_sociedades_p0_long.py`) termino con 0 fallas y 0 advertencias.
 - El inventario retrospectivo P0 tiene 112 filas, 0 fallas y 17 advertencias estructurales documentadas.
 - La prueba retrospectiva de detectores P0 cubrio 112 archivos/cuadros y actualmente no registra advertencias duras despues de adaptar los detectores.
-- Las advertencias vigentes por cuadro estan documentadas en `documentation/afip_p0_backward_warnings.md`.
+- Las advertencias vigentes por cuadro estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P1 para publication year 2014 / fiscal year 2013.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_inventory_p1.csv` con 13 cuadros de actividad HTML.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p1.csv` con 37.088 filas largas y 127 variables.
 - La validacion P1 (`51_validate_ganancias_sociedades_p1_long.py`) termino con 0 fallas y 0 advertencias.
-- Las notas estructurales P1 estan documentadas en `documentation/afip_p1_warnings.md`.
+- Las notas estructurales P1 estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P2 para publication year 2013 / fiscal year 2012.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_inventory_p2.csv` con 13 cuadros de actividad HTML.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p2.csv` con 27.208 filas largas y 127 variables.
 - La validacion P2 (`54_validate_ganancias_sociedades_p2_long.py`) termino con 0 fallas y 0 advertencias.
-- Las notas estructurales P2 estan documentadas en `documentation/afip_p2_warnings.md`.
+- Las notas estructurales P2 estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P3 para publication years 2009-2012 / fiscal years 2008-2011.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_inventory_p3.csv` con 49 pares anio-cuadro HTML.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p3.csv` con 97.775 filas largas y 129 variables.
 - La validacion P3 (`57_validate_ganancias_sociedades_p3_long.py`) termino con 0 fallas y 10 advertencias estructurales.
-- Las advertencias P3 estan documentadas en `documentation/afip_p3_warnings.md`.
+- Las advertencias P3 estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P4 para publication years 2003-2008 / fiscal years 2002-2007.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_inventory_p4.csv` con 60 pares anio-cuadro XLS dentro de `AFIP.CAB`.
 - Se genero `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p4.csv` con 132.088 filas largas y 111 variables.
 - La validacion P4 (`60_validate_ganancias_sociedades_p4_long.py`) termino con 0 fallas y 25 advertencias documentadas.
-- Las advertencias P4 estan documentadas en `documentation/afip_p4_warnings.md`.
+- Las advertencias P4 estan documentadas en `documentation/afip/warnings_by_period.md`.
 - Se completo P5 para publication year 2002 / fiscal years 1999-2001, con 31.229 filas largas y validacion de 0 fallas.
 - Se completo P6 para publication years 1998-1999 / fiscal years 1997-1998, con 3.044 filas largas y validacion de 0 fallas.
 - Se genero `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv` con 819.867 filas largas, preservando codigos y etiquetas originales.
@@ -215,19 +224,19 @@ Decisiones ya tomadas:
 La tabla de comparabilidad detallada vive en:
 
 ```text
-documentation/afip_variable_comparability.md
+documentation/afip/variable_comparability.md
 ```
 
 El diseno modular del ETL vive en:
 
 ```text
-documentation/afip_etl_design.md
+documentation/afip/etl_design.md
 ```
 
 El plan y diccionario metodologico de homologacion de ramas vive en:
 
 ```text
-documentation/afip_branch_harmonization_plan.md
+documentation/afip/branch_harmonization.md
 ```
 
 Resumen operativo por periodo homogeneo:
@@ -315,7 +324,7 @@ Objetivo original: implementar primero funciones auxiliares pequenas y probadas 
 
 Estado actual: P0 principal ya fue ampliado y completado para publication years 2015-2023 / fiscal years 2014-2022. P1 HTML tambien fue completado para publication year 2014 / fiscal year 2013. P2 HTML viejo en millones fue completado para publication year 2013 / fiscal year 2012. P3 HTML viejo en miles fue completado para publication years 2009-2012 / fiscal years 2008-2011.
 
-Las notas de extractos piloto que siguen documentan el desarrollo incremental; el estado operativo vigente del P0 completo esta en "Estado Actual" y en `documentation/afip_p0_backward_warnings.md`.
+Las notas de extractos piloto que siguen documentan el desarrollo incremental; el estado operativo vigente del P0 completo esta en "Estado Actual" y en `documentation/afip/warnings_by_period.md`.
 
 Criterio:
 
@@ -774,7 +783,7 @@ Actualizacion Fase 3 sobre P0:
 - Publication years 2015-2023 / fiscal years 2014-2022 fueron incorporados al P0 principal.
 - El ensamble P0 cubre ahora fiscal years 2014-2022.
 - La validacion consolidada del ensamble P0 tiene 0 errores y 0 advertencias.
-- Las advertencias de cuadro estan documentadas en `documentation/afip_p0_backward_warnings.md`; se preservan valores fuente y codigos originales sin homologacion.
+- Las advertencias de cuadro estan documentadas en `documentation/afip/warnings_by_period.md`; se preservan valores fuente y codigos originales sin homologacion.
 
 ### Fase 3: extension P0 completa, 2015-2023
 
@@ -788,7 +797,7 @@ Artefactos:
 - Validacion del inventario: `data/output-data/validation_reports/ganancias_sociedades_p0_backward_inventory_validation.md`.
 - Prueba de detectores: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_p0_backward_detector_probe.csv`.
 - Reporte de detectores: `data/output-data/validation_reports/ganancias_sociedades_p0_backward_detector_probe.md`.
-- Bitacora metodologica de advertencias: `documentation/afip_p0_backward_warnings.md`.
+- Bitacora metodologica de advertencias: `documentation/afip/warnings_by_period.md`.
 
 Resultado actual:
 
@@ -831,7 +840,7 @@ Artefactos:
 - Extraccion larga P1: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p1.csv`.
 - Validacion P1: `data/output-data/validation_reports/ganancias_sociedades_p1_long_validation.md`.
 - Conteos P1: `data/output-data/validation_reports/ganancias_sociedades_p1_long_counts.csv`.
-- Bitacora P1: `documentation/afip_p1_warnings.md`.
+- Bitacora P1: `documentation/afip/warnings_by_period.md`.
 
 Resultado actual:
 
@@ -859,7 +868,7 @@ Artefactos P2:
 - Extraccion larga P2: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p2.csv`.
 - Validacion P2: `data/output-data/validation_reports/ganancias_sociedades_p2_long_validation.md`.
 - Conteos P2: `data/output-data/validation_reports/ganancias_sociedades_p2_long_counts.csv`.
-- Bitacora P2: `documentation/afip_p2_warnings.md`.
+- Bitacora P2: `documentation/afip/warnings_by_period.md`.
 
 Resultado P2:
 
@@ -877,7 +886,7 @@ Artefactos P3:
 - Extraccion larga P3: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p3.csv`.
 - Validacion P3: `data/output-data/validation_reports/ganancias_sociedades_p3_long_validation.md`.
 - Conteos P3: `data/output-data/validation_reports/ganancias_sociedades_p3_long_counts.csv`.
-- Bitacora P3: `documentation/afip_p3_warnings.md`.
+- Bitacora P3: `documentation/afip/warnings_by_period.md`.
 
 Resultado P3:
 
@@ -907,7 +916,7 @@ Artefactos P4:
 - Extraccion larga P4: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p4.csv`.
 - Validacion P4: `data/output-data/validation_reports/ganancias_sociedades_p4_long_validation.md`.
 - Conteos P4: `data/output-data/validation_reports/ganancias_sociedades_p4_long_counts.csv`.
-- Bitacora P4: `documentation/afip_p4_warnings.md`.
+- Bitacora P4: `documentation/afip/warnings_by_period.md`.
 
 Resultado P4:
 
@@ -946,7 +955,7 @@ Artefactos P5:
 - Extraccion larga P5: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p5.csv`.
 - Validacion P5: `data/output-data/validation_reports/ganancias_sociedades_p5_long_validation.md`.
 - Conteos P5: `data/output-data/validation_reports/ganancias_sociedades_p5_long_counts.csv`.
-- Bitacora P5: `documentation/afip_p5_warnings.md`.
+- Bitacora P5: `documentation/afip/warnings_by_period.md`.
 
 Resultado P5:
 
@@ -979,7 +988,7 @@ Artefactos P6:
 - Extraccion larga P6: `data/intermediate-data/afip-estadisticas-tributarias/afip_ganancias_sociedades_long_p6.csv`.
 - Validacion P6: `data/output-data/validation_reports/ganancias_sociedades_p6_long_validation.md`.
 - Conteos P6: `data/output-data/validation_reports/ganancias_sociedades_p6_long_counts.csv`.
-- Bitacora P6: `documentation/afip_p6_warnings.md`.
+- Bitacora P6: `documentation/afip/warnings_by_period.md`.
 
 Resultado P6:
 
@@ -1058,8 +1067,8 @@ Las salidas finales fechadas ya estan creadas:
 
 El siguiente paso recomendado es iniciar analisis R o decidir una homologacion fina de actividades de 3 digitos entre clasificador viejo y nuevo:
 
-- Usar `documentation/afip_p0_backward_warnings.md`, `documentation/afip_p1_warnings.md`, `documentation/afip_p2_warnings.md`, `documentation/afip_p3_warnings.md`, `documentation/afip_p4_warnings.md`, `documentation/afip_p5_warnings.md` y `documentation/afip_p6_warnings.md` como guias de discontinuidades y notas estructurales.
-- Usar `documentation/afip_branch_harmonization_plan.md` como guia de ramas comunes.
+- Usar `documentation/afip/warnings_by_period.md` como guia consolidada de discontinuidades y notas estructurales P0-P6.
+- Usar `documentation/afip/branch_harmonization.md` como guia de ramas comunes.
 - Mantener el criterio de no imputar desde cuadros agregados cuando una tabla detallada trae celdas en blanco.
 
 Evitar supuestos metodologicos sobre empalmes, deflactacion, correspondencias sectoriales finas o variables derivadas finales. La homologacion amplia actual no resuelve equivalencias directas de actividades de 3 digitos entre clasificadores.

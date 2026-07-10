@@ -14,18 +14,12 @@ No contiene codigo de extraccion ni define decisiones metodologicas finales.
 - Datos crudos locales: `data/input-data/raw/afip-estadisticas-tributarias/`.
 - Archivos crudos: 26 ZIP anuales.
 - Validacion basica: los ZIP fueron probados con `unzip -tq` sin errores detectados.
-- Mapeo estructural: `documentation/afip_structural_mapping.yml`.
-- Inventario preliminar: `documentation/afip_archive_inventory.md`.
-- Comparabilidad del capitulo: `documentation/afip_variable_comparability.md`.
-- Diseno ETL modular: `documentation/afip_etl_design.md`.
-- Advertencias de extension retrospectiva P0: `documentation/afip_p0_backward_warnings.md`.
-- Notas estructurales P1: `documentation/afip_p1_warnings.md`.
-- Notas estructurales P2: `documentation/afip_p2_warnings.md`.
-- Advertencias P3: `documentation/afip_p3_warnings.md`.
-- Advertencias P4: `documentation/afip_p4_warnings.md`.
-- Advertencias P5: `documentation/afip_p5_warnings.md`.
-- Advertencias P6: `documentation/afip_p6_warnings.md`.
-- Homologacion de ramas: `documentation/afip_branch_harmonization_plan.md`.
+- Mapeo estructural: `documentation/afip/structural_mapping.yml`.
+- Inventario preliminar: `documentation/afip/archive_inventory.md`.
+- Comparabilidad del capitulo: `documentation/afip/variable_comparability.md`.
+- Diseno ETL modular: `documentation/afip/etl_design.md`.
+- Advertencias y notas estructurales P0-P6: `documentation/afip/warnings_by_period.md`.
+- Homologacion de ramas: `documentation/afip/branch_harmonization.md`.
 
 ## Epocas Operativas
 
@@ -88,7 +82,7 @@ Resultados actuales:
 - Prueba de detectores retrospectiva: 112 filas, 0 advertencias luego de adaptar detectores.
 - P0 principal: 20 tablas extraidas, 491.435 filas largas ensambladas para fiscal years 2014-2022.
 - Validacion consolidada P0: 0 fallas y 0 advertencias.
-- Todas las advertencias por cuadro estan documentadas en `documentation/afip_p0_backward_warnings.md`.
+- Todas las advertencias por cuadro estan documentadas en `documentation/afip/warnings_by_period.md`.
 
 Estado posterior: el CSV completo de analisis desde P0+P1+P2+P3+P4+P5+P6 validados ya fue generado, primero sin homologar y luego con una homologacion amplia de ramas.
 
@@ -111,7 +105,7 @@ Resultados actuales:
 - Variables canonicas observadas: 127.
 - Validacion P1: 0 fallas y 0 advertencias.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p1_long_validation.md`.
-- Notas estructurales: `documentation/afip_p1_warnings.md`.
+- Notas estructurales: `documentation/afip/warnings_by_period.md`.
 
 Estado posterior: P2 ya fue incorporado; el siguiente paso operativo vigente es P3.
 
@@ -134,7 +128,7 @@ Resultados actuales:
 - Variables canonicas observadas: 127.
 - Validacion P2: 0 fallas y 0 advertencias.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p2_long_validation.md`.
-- Notas estructurales: `documentation/afip_p2_warnings.md`.
+- Notas estructurales: `documentation/afip/warnings_by_period.md`.
 - `classifier_period = old`; unidad monetaria original en millones de pesos corrientes.
 
 Estado posterior: P3, P4, P5 y P6 ya fueron incorporados; el siguiente paso operativo vigente es generar la base cruda de analisis.
@@ -158,7 +152,7 @@ Resultados actuales:
 - Variables canonicas observadas: 129.
 - Validacion P3: 0 fallas y 10 advertencias estructurales.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p3_long_validation.md`.
-- Advertencias: `documentation/afip_p3_warnings.md`.
+- Advertencias: `documentation/afip/warnings_by_period.md`.
 - `classifier_period = old`; unidad monetaria original en miles de pesos corrientes.
 
 Estado posterior: P4, P5 y P6 ya fueron incorporados; el siguiente paso operativo vigente es generar la base cruda de analisis.
@@ -182,7 +176,7 @@ Resultados actuales:
 - Variables canonicas observadas: 111.
 - Validacion P4: 0 fallas y 25 advertencias documentadas.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p4_long_validation.md`.
-- Advertencias: `documentation/afip_p4_warnings.md`.
+- Advertencias: `documentation/afip/warnings_by_period.md`.
 - `classifier_period = old`; unidad monetaria original en miles de pesos corrientes.
 - Se usa `_2.xls` como regla de maximo detalle de actividad.
 
@@ -207,7 +201,7 @@ Resultados actuales:
 - Variables canonicas observadas: 114.
 - Validacion P5: 0 fallas y 35 advertencias documentadas.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p5_long_validation.md`.
-- Advertencias: `documentation/afip_p5_warnings.md`.
+- Advertencias: `documentation/afip/warnings_by_period.md`.
 - `classifier_period = old`; unidad monetaria original en miles de pesos corrientes.
 - Se usa publication year 2002 como fuente canonica para fiscal years 1999-2001 y se descartan publicaciones anteriores duplicadas.
 - Fiscal years 1999-2000 tienen esquema compacto de cuatro cuadros; fiscal year 2001 tiene numeracion antigua expandida.
@@ -233,7 +227,7 @@ Resultados actuales:
 - Variables canonicas observadas: 36.
 - Validacion P6: 0 fallas y 24 advertencias documentadas.
 - Reporte: `data/output-data/validation_reports/ganancias_sociedades_p6_long_validation.md`.
-- Advertencias: `documentation/afip_p6_warnings.md`.
+- Advertencias: `documentation/afip/warnings_by_period.md`.
 - `classifier_period = old`; unidad monetaria original en miles de pesos corrientes.
 - Fiscal year 1997 usa numeracion `4.4.*` y solo actividad amplia.
 - Fiscal year 1998 usa numeracion `3.3.*` y tiene detalle 3 digitos en archivos `_2.xls`.

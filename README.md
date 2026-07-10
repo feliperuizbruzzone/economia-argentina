@@ -7,6 +7,15 @@ El foco operativo actual es el capitulo `Impuesto a las Ganancias Sociedades`, c
 
 Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados en `data/input-data/raw/afip-estadisticas-tributarias/`. El pipeline de Ganancias Sociedades ya cubre P0-P6, fiscal years 1997-2022, y genera dos CSV finales fechados: una version sin homologar y una version homologada por rama comun amplia.
 
+## Archivos relevantes
+
+- [Minuta del procedimiento AFIP/ARCA](docs/minuta_afip_arca.md): resumen de descarga, sistematizacion, homologacion y estructura del panel.
+- [CSV final homologado](data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv): salida local/regenerable del pipeline, con ramas economicas homologadas.
+- [CSV final sin homologar](data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv): salida local/regenerable del pipeline, preservando ramas originales.
+- [Documentacion AFIP](documentation/afip/README.md): indice de documentos metodologicos de la fuente.
+
+Nota: los CSV finales superan el limite normal de GitHub para archivos versionados. Quedan ignorados por `.gitignore` y se regeneran con `python3 command-files/run_all.py`, salvo que se publiquen como assets de Release o con Git LFS.
+
 ## Estructura
 
 - `command-files/`: scripts que crean, transforman, validan y analizan los datos.
@@ -46,9 +55,9 @@ python3 command-files/processing-command-files/<script>.py
 Antes de escribir extraccion sustantiva, revisar:
 
 - `CONTEXT.md`
-- `documentation/afip_structural_mapping.yml`
-- `documentation/afip_work_plan.md`
-- `documentation/afip_branch_harmonization_plan.md`
+- `documentation/afip/structural_mapping.yml`
+- `documentation/afip/work_plan.md`
+- `documentation/afip/branch_harmonization.md`
 
 ## Reglas de reproducibilidad
 
