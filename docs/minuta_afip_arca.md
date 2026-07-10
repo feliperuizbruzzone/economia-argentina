@@ -34,15 +34,14 @@ data/input-data/raw/afip-estadisticas-tributarias/
 data/intermediate-data/afip-estadisticas-tributarias/
 ```
 
-- Las salidas finales para analisis se guardan en:
+- El panel final para analisis se guarda en:
 
 ```text
 data/analysis-data/
 ```
 
-- Los ZIP crudos quedaron versionables en Git. Los CSV finales de analisis
-  quedan ignorados por `.gitignore` porque superan el limite normal de GitHub
-  para blobs, pero son regenerables con el pipeline completo.
+- Los ZIP crudos quedaron versionables en Git. La salida final se publica como
+  `csv.gz` tidy para quedar por debajo del limite normal de GitHub.
 
 Validacion basica:
 
@@ -110,9 +109,11 @@ python3 command-files/run_all.py
 
 Resultado final validado:
 
-- CSV sin homologar: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv`.
-- CSV homologado: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv`.
-- Filas en cada CSV final: 819.867.
+- Panel tidy homologado: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
+- Filas del panel: 819.867.
+- Tamano comprimido validado: 11.758.387 bytes.
+- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv`.
+- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv`.
 - Validacion final: 0 fallas.
 
 ## 3. Homologacion De Ramas Economicas
@@ -128,7 +129,7 @@ Columnas fuente preservadas:
 - `activity_section_original`
 - `classifier_period`
 
-Columnas agregadas:
+Columnas agregadas al panel o a sus diccionarios:
 
 - `rama_comun_*`: rama amplia comparable para toda la serie 1997-2022.
 - `rama_detalle_homologada_*`: detalle fuente preservado con codigos namespaced
@@ -168,12 +169,14 @@ documentation/afip/branch_harmonization.md
 
 Orden fisico de los datos:
 
-1. El ensamble final concatena los extractos validados P0-P6.
+1. El ensamble final lee los extractos validados P0-P6.
 2. El orden operativo va desde el periodo mas reciente hacia atras:
    P0, P1, P2, P3, P4, P5 y P6.
 3. Dentro de cada periodo se conserva el orden producido por los extractores:
    fuente, cuadro, dimension y variable.
-4. Para analisis no debe dependerse del orden fisico del CSV; usar
+4. El panel final se comprime como gzip y separa metadatos largos en
+   diccionarios de fuente y actividad.
+5. Para analisis no debe dependerse del orden fisico del CSV; usar
    identificadores canonicos.
 
 Identificadores recomendados:
@@ -191,38 +194,66 @@ Diccionario de columnas:
 |---|---|
 | `publication_year` | Anio de publicacion del anuario o ZIP fuente. |
 | `fiscal_year` | Anio fiscal informado en el cuadro. |
-| `archive_filename` | Nombre del ZIP anual de origen. |
 | `period_id` | Epoca estructural asignada por el pipeline. |
 | `source_table_id` | Identificador original del cuadro fuente. |
-| `source_table_path` | Ruta interna del archivo o tabla dentro del ZIP/CAB/HTML. |
-| `source_table_title` | Titulo original del cuadro fuente. |
-| `table_family` | Familia canonica del cuadro dentro del capitulo. |
-| `universe` | Universo del cuadro, actualmente Ganancias Sociedades. |
+| `source_key` | Llave hacia el diccionario de fuente. |
+| `activity_key` | Llave hacia el diccionario de actividad/homologacion. |
 | `dimension_type` | Tipo de dimension; para esta base principal, actividad economica. |
 | `dimension_value` | Codigo canonico de la dimension dentro del cuadro. |
+| `source_row_zero_based` | Fila fuente de la celda extraida, base cero. |
+| `source_column_zero_based` | Columna fuente de la celda extraida, base cero. |
+| `classifier_period` | Clasificador de actividad: `new` u `old`. |
 | `activity_level` | Nivel de actividad: total, seccion, actividad 3 digitos, amplia u otras. |
 | `activity_code` | Codigo de actividad extraido o normalizado desde la fuente. |
-| `activity_label_original` | Etiqueta original de actividad. |
-| `activity_section_original` | Seccion original de actividad cuando existe. |
-| `classifier_period` | Clasificador de actividad: `new` u `old`. |
+| `rama_comun_codigo` | Codigo de rama amplia comparable en toda la serie. |
+| `rama_detalle_homologada_codigo` | Codigo de detalle preservado con namespace por clasificador. |
 | `variable_name` | Nombre canonico de la variable estadistica. |
 | `value` | Valor normalizado como texto/decimal segun fuente. |
 | `unit_original` | Unidad original observada, por ejemplo casos, miles o millones de pesos corrientes. |
 | `value_pesos_current` | Monto monetario convertido a pesos corrientes cuando aplica. |
-| `source_note` | Nota de fuente o decision de mapeo especifica de la fila. |
-| `header_start_row_zero_based` | Fila inicial del encabezado detectado, base cero. |
-| `data_start_row_zero_based` | Fila inicial de datos detectada, base cero. |
-| `source_row_zero_based` | Fila fuente de la celda extraida, base cero. |
-| `source_column_zero_based` | Columna fuente de la celda extraida, base cero. |
-| `rama_homologacion_version` | Version de la regla de homologacion de ramas. |
-| `rama_homologacion_estado` | Estado de mapeo: `mapped`, `source_other` o `source_total`. |
-| `rama_comun_codigo` | Codigo de rama amplia comparable en toda la serie. |
+
+Columnas del diccionario de fuente:
+
+| Columna | Descripcion |
+|---|---|
+| `source_key` | Llave usada en el panel tidy. |
+| `publication_year` | Anio de publicacion. |
+| `fiscal_year` | Anio fiscal. |
+| `period_id` | Epoca estructural. |
+| `archive_filename` | Nombre del ZIP anual de origen. |
+| `source_table_id` | Identificador del cuadro fuente. |
+| `source_table_path` | Ruta interna dentro del ZIP/CAB/HTML. |
+| `source_table_title` | Titulo original del cuadro. |
+| `table_family` | Familia canonica del cuadro. |
+| `universe` | Universo del cuadro. |
+| `dimension_type` | Tipo de dimension. |
+| `source_note` | Nota de fuente o decision de mapeo. |
+| `header_start_row_zero_based` | Fila inicial del encabezado detectado. |
+| `data_start_row_zero_based` | Fila inicial de datos detectada. |
+| `row_count` | Filas del panel asociadas a la fuente. |
+
+Columnas del diccionario de actividad:
+
+| Columna | Descripcion |
+|---|---|
+| `activity_key` | Llave usada en el panel tidy. |
+| `rama_homologacion_version` | Version de la regla de homologacion. |
+| `classifier_period` | Clasificador de actividad. |
+| `activity_level` | Nivel de actividad. |
+| `activity_code` | Codigo de actividad. |
+| `activity_label_original` | Etiqueta original. |
+| `activity_section_original` | Seccion original. |
+| `rama_homologacion_estado` | Estado de mapeo. |
+| `rama_comun_codigo` | Codigo de rama amplia comparable. |
 | `rama_comun_label` | Etiqueta de rama amplia comparable. |
 | `rama_comun_nivel` | Nivel de la rama comun. |
-| `rama_detalle_homologada_codigo` | Codigo de detalle preservado con namespace por clasificador. |
+| `rama_detalle_homologada_codigo` | Codigo de detalle preservado. |
 | `rama_detalle_homologada_label` | Etiqueta de detalle preservada. |
-| `rama_detalle_homologada_nivel` | Nivel del detalle homologado/preservado. |
-| `rama_homologacion_nota` | Nota sobre la regla usada para homologar la rama. |
+| `rama_detalle_homologada_nivel` | Nivel del detalle preservado. |
+| `rama_homologacion_nota` | Nota de homologacion. |
+| `fiscal_year_min` | Primer anio fiscal observado para esa clave. |
+| `fiscal_year_max` | Ultimo anio fiscal observado para esa clave. |
+| `row_count` | Filas del panel asociadas a la actividad. |
 
 ## 5. Archivos De Referencia
 

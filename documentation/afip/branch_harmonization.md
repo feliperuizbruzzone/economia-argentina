@@ -9,14 +9,15 @@ La homologacion se aplica despues de la extraccion y del ensamble P0-P6. No
 modifica columnas fuente: conserva `activity_level`, `activity_code`,
 `activity_label_original`, `activity_section_original` y `classifier_period`.
 
-Salidas generadas:
+Salidas vigentes:
 
 ```text
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv
+data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz
+data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv
 data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
-data/output-data/validation_reports/ganancias_sociedades_analysis_outputs_validation.md
-data/output-data/validation_reports/ganancias_sociedades_harmonized_branch_counts.csv
+data/output-data/validation_reports/ganancias_sociedades_tidy_outputs_validation.md
+data/output-data/validation_reports/ganancias_sociedades_tidy_branch_counts.csv
 ```
 
 ## Decision Metodologica
@@ -65,15 +66,15 @@ posterior si se requiere una serie sectorial fina empalmada.
 
 ## Validacion
 
-La validacion `69_validate_ganancias_sociedades_analysis_outputs.py` confirma:
+La validacion `68_validate_ganancias_sociedades_tidy_outputs.py` confirma:
 
-- 819.867 filas en el CSV sin homologar.
-- 819.867 filas en el CSV homologado.
+- 819.867 filas en el panel tidy homologado.
+- tamano comprimido de 11.758.387 bytes, menor al limite normal de GitHub.
 - cobertura fiscal 1997-2022 completa.
 - 0 filas `NO_HOMOLOGADO`.
-- 0 estados `unmapped`.
-- 569 entradas en el diccionario de ramas.
+- 320 entradas en el diccionario de fuente.
+- 569 entradas en el diccionario de actividad/ramas.
 
-Advertencia documentada: la homologacion preserva filas y agrega ramas comunes
+Advertencia metodologica: la homologacion preserva filas y agrega ramas comunes
 amplias; los codigos de 3 digitos viejo/nuevo siguen siendo especificos de su
 clasificador.

@@ -28,11 +28,10 @@ desarrollo incremental; el estado operativo vigente es el resumido arriba.
 Construir una base larga con columnas canonicas consistentes entre epocas,
 preservando el maximo nivel de desagregacion disponible en cada periodo.
 
-Salidas finales actuales:
+Salida final actual:
 
 ```text
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv
+data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz
 ```
 
 ## Columnas Canonicas
@@ -997,23 +996,24 @@ Current result:
 Current final analysis tasks are implemented:
 
 ```bash
-python3 command-files/processing-command-files/67_assemble_ganancias_sociedades_complete_sin_homologar.py
-python3 command-files/processing-command-files/68_homologate_ganancias_sociedades_branches.py
-python3 command-files/processing-command-files/69_validate_ganancias_sociedades_analysis_outputs.py
+python3 command-files/processing-command-files/67_build_ganancias_sociedades_tidy_homologado.py
+python3 command-files/processing-command-files/68_validate_ganancias_sociedades_tidy_outputs.py
 ```
 
 Outputs:
 
 ```text
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv
-data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv
+data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz
+data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv
+data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv
 data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv
-data/output-data/validation_reports/ganancias_sociedades_analysis_outputs_validation.md
+data/output-data/validation_reports/ganancias_sociedades_tidy_outputs_validation.md
 ```
 
-The harmonization layer preserves source activity columns and adds common
-broad-branch fields for full-series comparability. It does not claim direct
-3-digit equivalence between the old and new classifiers.
+The final panel is a compact tidy gzip designed to be versionable on GitHub.
+Long source strings and activity labels are preserved in intermediate
+dictionaries keyed by `source_key` and `activity_key`. The harmonization layer
+does not claim direct 3-digit equivalence between the old and new classifiers.
 
 Current P0 inventory scope:
 

@@ -184,7 +184,7 @@ Para el primer panel analitico ampliado, extender luego a 2015-2023:
 - La extension 2015-2020 ya fue completada; las advertencias completas estan en `documentation/afip/warnings_by_period.md`.
 - Fiscal years 2014-2022 ya estan incorporados al P0 principal y validados en el ensamble.
 - Fiscal years 2014-2018 conservan discontinuidades internas documentadas, especialmente ventas detalladas tempranas, quebranto computable, subcuadros patrimoniales ausentes y patrimonio positivo/negativo en 2014-2016.
-- La homologacion amplia de ramas economicas ya fue implementada en `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv`. Conserva codigos y etiquetas originales, agrega rama comun amplia y no equipara directamente codigos de 3 digitos entre clasificadores.
+- La homologacion amplia de ramas economicas ya fue implementada en `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`. Conserva codigos originales en el panel y etiquetas originales en el diccionario de actividad; agrega rama comun amplia y no equipara directamente codigos de 3 digitos entre clasificadores.
 
 La extraccion hacia atras del capitulo Ganancias Sociedades esta cubierta para fiscal years 1997-2022. La siguiente tarea es construir la base de analisis y luego homologar ramas economicas.
 

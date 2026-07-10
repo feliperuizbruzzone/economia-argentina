@@ -74,9 +74,8 @@ PIPELINE = (
     PROJECT_ROOT / "command-files" / "processing-command-files" / "64_build_ganancias_sociedades_p6_inventory.py",
     PROJECT_ROOT / "command-files" / "processing-command-files" / "65_extract_ganancias_sociedades_p6_long.py",
     PROJECT_ROOT / "command-files" / "processing-command-files" / "66_validate_ganancias_sociedades_p6_long.py",
-    PROJECT_ROOT / "command-files" / "processing-command-files" / "67_assemble_ganancias_sociedades_complete_sin_homologar.py",
-    PROJECT_ROOT / "command-files" / "processing-command-files" / "68_homologate_ganancias_sociedades_branches.py",
-    PROJECT_ROOT / "command-files" / "processing-command-files" / "69_validate_ganancias_sociedades_analysis_outputs.py",
+    PROJECT_ROOT / "command-files" / "processing-command-files" / "67_build_ganancias_sociedades_tidy_homologado.py",
+    PROJECT_ROOT / "command-files" / "processing-command-files" / "68_validate_ganancias_sociedades_tidy_outputs.py",
 )
 
 

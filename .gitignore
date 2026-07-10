@@ -39,6 +39,6 @@ data/output-data/*
 !data/output-data/.gitkeep
 !data/output-data/README.md
 
-# Regenerable analysis CSVs. The current final CSVs exceed GitHub's normal
-# 100 MB file limit and are rebuilt by the reproducible pipeline.
+# Regenerable uncompressed analysis CSVs. The shareable final panel is the
+# compressed .csv.gz and is intentionally versionable.
 data/analysis-data/*.csv

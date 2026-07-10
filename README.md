@@ -5,16 +5,15 @@ Repositorio organizado segun el protocolo Project TIER 4.0 para sistematizar ser
 El objetivo es construir una serie 1998-2023 en CSV para analizar rentabilidad y desempeno economico por rama o subrama economica cuando los archivos fuente lo permitan.
 El foco operativo actual es el capitulo `Impuesto a las Ganancias Sociedades`, con maxima desagregacion disponible y base canonica en formato largo.
 
-Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados en `data/input-data/raw/afip-estadisticas-tributarias/`. El pipeline de Ganancias Sociedades ya cubre P0-P6, fiscal years 1997-2022, y genera dos CSV finales fechados: una version sin homologar y una version homologada por rama comun amplia.
+Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados en `data/input-data/raw/afip-estadisticas-tributarias/`. El pipeline de Ganancias Sociedades ya cubre P0-P6, fiscal years 1997-2022, y genera un panel tidy homologado comprimido, con diccionarios de trazabilidad regenerables.
 
 ## Archivos relevantes
 
 - [Minuta del procedimiento AFIP/ARCA](docs/minuta_afip_arca.md): resumen de descarga, sistematizacion, homologacion y estructura del panel.
-- [CSV final homologado](data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv): salida local/regenerable del pipeline, con ramas economicas homologadas.
-- [CSV final sin homologar](data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv): salida local/regenerable del pipeline, preservando ramas originales.
+- [Panel tidy homologado](data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz): salida final comprimida y apta para versionar en GitHub.
 - [Documentacion AFIP](documentation/afip/README.md): indice de documentos metodologicos de la fuente.
 
-Nota: los CSV finales superan el limite normal de GitHub para archivos versionados. Quedan ignorados por `.gitignore` y se regeneran con `python3 command-files/run_all.py`, salvo que se publiquen como assets de Release o con Git LFS.
+Nota: los diccionarios de trazabilidad se generan en `data/intermediate-data/afip-estadisticas-tributarias/` y no se versionan porque son salidas regenerables.
 
 ## Estructura
 
@@ -25,7 +24,7 @@ Nota: los CSV finales superan el limite normal de GitHub para archivos versionad
 - `data/input-data/`: datos originales. Se tratan como solo lectura una vez descargados o incorporados.
 - `data/intermediate-data/`: archivos transitorios generados por scripts. No son insumos canonicos.
 - `data/intermediate-data/afip-estadisticas-tributarias/`: salidas intermedias regenerables de la fuente AFIP/ARCA.
-- `data/analysis-data/`: datos listos para analisis. Las salidas actuales son `2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv` y `2026-05-31_afip_ganancias_sociedades_long_homologada.csv`.
+- `data/analysis-data/`: datos listos para analisis. La salida actual es `2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
 - `data/output-data/`: resultados generados, como tablas, figuras o reportes.
 - `documentation/`: notas metodologicas, diccionarios, referencias y bitacoras.
 - `tests/`: pruebas automatizadas y validaciones de reproducibilidad.

@@ -18,7 +18,7 @@ series:
   coverage_years: [1998, 2023]
   archive_count: 26
   archive_type: "zip"
-  final_output_target: "data/analysis-data/afip_ganancias_sociedades_long.csv"
+  final_output_target: "data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz"
 
 epochs:
   legacy_direct_xls_install_layout:

@@ -232,7 +232,8 @@ Resultados actuales:
 - Fiscal year 1997 usa numeracion `4.4.*` y solo actividad amplia.
 - Fiscal year 1998 usa numeracion `3.3.*` y tiene detalle 3 digitos en archivos `_2.xls`.
 
-Estado posterior: se generaron los CSV finales fechados en `data/analysis-data/` y se valido la homologacion de ramas.
+Estado posterior: se genero el panel tidy homologado en `data/analysis-data/`
+y se validaron los diccionarios de trazabilidad y la homologacion de ramas.
 
 ## Estado De Fase 9 Salidas De Analisis Y Homologacion
 
@@ -241,18 +242,18 @@ Fase completada para fiscal years 1997-2022.
 Comandos incorporados al flujo reproducible:
 
 ```bash
-python3 command-files/processing-command-files/67_assemble_ganancias_sociedades_complete_sin_homologar.py
-python3 command-files/processing-command-files/68_homologate_ganancias_sociedades_branches.py
-python3 command-files/processing-command-files/69_validate_ganancias_sociedades_analysis_outputs.py
+python3 command-files/processing-command-files/67_build_ganancias_sociedades_tidy_homologado.py
+python3 command-files/processing-command-files/68_validate_ganancias_sociedades_tidy_outputs.py
 ```
 
 Resultados actuales:
 
-- CSV sin homologar: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_sin_homologar.csv`.
-- CSV homologado: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_long_homologada.csv`.
-- Ambos CSV tienen 819.867 filas y cobertura fiscal 1997-2022.
+- Panel tidy homologado: `data/analysis-data/2026-05-31_afip_ganancias_sociedades_tidy_homologado.csv.gz`.
+- El panel tiene 819.867 filas, cobertura fiscal 1997-2022 y pesa 11.758.387 bytes comprimido.
+- Diccionario de fuente: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_source_dictionary.csv`.
+- Diccionario de actividad: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_activity_dictionary.csv`.
 - Diccionario de homologacion: `data/intermediate-data/afip-estadisticas-tributarias/2026-05-31_afip_ganancias_sociedades_ramas_homologacion_diccionario.csv`.
-- Validacion final: 0 fallas y 1 advertencia metodologica.
-- La homologacion agrega `rama_comun_*` para comparabilidad amplia y `rama_detalle_homologada_*` para conservar detalle fuente por clasificador.
+- Validacion final: 0 fallas y 0 advertencias.
+- La homologacion agrega `rama_comun_codigo` para comparabilidad amplia y `rama_detalle_homologada_codigo` para conservar detalle fuente por clasificador; etiquetas y rutas largas viven en diccionarios.
 
 Siguiente paso metodologico: decidir si se construira una correspondencia fina de actividades a 3 digitos entre clasificador viejo y nuevo o si el analisis se hara sobre ramas comunes amplias.
