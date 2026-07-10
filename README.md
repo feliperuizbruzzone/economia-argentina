@@ -9,7 +9,7 @@ Estado actual: los 26 ZIP crudos AFIP/ARCA para 1998-2023 ya estan descargados e
 
 ## Archivos relevantes
 
-- [Minuta del procedimiento AFIP/ARCA](docs/minuta_afip_arca.md): resumen de descarga, sistematizacion, homologacion y estructura del panel.
+- [Minuta del procedimiento AFIP/ARCA](docs/20260710_minuta_afip_arca.md): resumen de descarga, sistematizacion, homologacion y estructura del panel.
 - [Panel analitico homologado](data/analysis-data/20260710_afip_ganancias_sociedades_tidy_homologado.csv): salida final sin comprimir y apta para versionar en GitHub.
 - [Documentacion AFIP](documentation/afip/README.md): indice de documentos metodologicos de la fuente.
 
